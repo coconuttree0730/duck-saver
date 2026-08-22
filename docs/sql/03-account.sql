@@ -3,7 +3,7 @@ USE duck_saver_account;
 
 CREATE TABLE IF NOT EXISTS account (
     id         BIGINT      NOT NULL AUTO_INCREMENT COMMENT '主键',
-    name       VARCHAR(50) NOT NULL COMMENT '账户名（即登录用户名）',
+    name       VARCHAR(50) NOT NULL COMMENT '账户名（URL 寻址标识，全局唯一）',
     currency   VARCHAR(8)  NOT NULL DEFAULT 'CNY' COMMENT '币种',
     version    BIGINT      NOT NULL DEFAULT 0 COMMENT '乐观锁版本',
     deleted    TINYINT     NOT NULL DEFAULT 0 COMMENT '逻辑删除',
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS saving (
     account_id BIGINT        NOT NULL COMMENT '所属账户',
     amount     DECIMAL(14,2) NOT NULL DEFAULT 0 COMMENT '储蓄总额',
     interest   DECIMAL(8,4)  NOT NULL DEFAULT 0 COMMENT '年利率（如 0.0150）',
-    deposit    TINYINT(1)    NOT NULL DEFAULT 1 COMMENT '是否存款',
+    deposit    DECIMAL(14,2) NOT NULL DEFAULT 0 COMMENT '累计存入本金',
     currency   VARCHAR(8)    NOT NULL DEFAULT 'CNY',
     version    BIGINT        NOT NULL DEFAULT 0,
     deleted    TINYINT       NOT NULL DEFAULT 0,

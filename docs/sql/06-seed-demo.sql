@@ -21,7 +21,7 @@ SELECT 'b2c3d4e5f60718293a4b5c6d7e8f9001', id, '地铁通勤', 12.50, 'CNY', '�
 FROM account WHERE name = 'demo';
 
 INSERT IGNORE INTO saving (account_id, amount, interest, deposit, currency)
-SELECT id, 10000.00, 0.0150, 1, 'CNY' FROM account WHERE name = 'demo';
+SELECT id, 10000.00, 0.0150, 5000.00, 'CNY' FROM account WHERE name = 'demo';
 
 USE duck_saver_notification;
 INSERT IGNORE INTO recipient (account_name, email) VALUES ('demo', 'demo@example.com');
