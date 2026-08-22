@@ -14,3 +14,10 @@ target/
 **/*.project
 **/*.classpath
 **/*.settings
+
+# temp
+*.my.bak
+
+
+# documents
+docs/

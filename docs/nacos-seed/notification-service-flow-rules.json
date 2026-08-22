@@ -1,0 +1,4 @@
+[
+  { "resource": "/notifications/recipients/current", "limitApp": "default", "grade": 1, "count": 30, "strategy": 0, "controlBehavior": 0, "clusterMode": false },
+  { "resource": "/recipients/current", "limitApp": "default", "grade": 1, "count": 30, "strategy": 0, "controlBehavior": 0, "clusterMode": false }
+]

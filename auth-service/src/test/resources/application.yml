@@ -1,5 +1,16 @@
 spring:
-  data:
-    mongodb:
-      database: piggymetrics
-      port: 0
+  data.redis:
+    host: localhost
+    port: 6399
+  cloud:
+    nacos:
+      discovery:
+        enabled: false
+      config:
+        enabled: false
+    sentinel:
+      enabled: false
+
+sa-token:
+  token-name: satoken
+  timeout: 2592000

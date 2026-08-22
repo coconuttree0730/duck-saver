@@ -1,0 +1,33 @@
+server:
+  port: 9000
+  servlet:
+    context-path: /ai
+
+spring:
+  application:
+    name: ai-service
+  config:
+    import: optional:nacos:${spring.application.name}.yml
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:nacos-server:8848}
+      config:
+        server-addr: ${NACOS_SERVER_ADDR:nacos-server:8848}
+    sentinel:
+      transport:
+        dashboard: ${SENTINEL_DASHBOARD_ADDR:sentinel-dashboard:8858}
+      eager: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

@@ -1,0 +1,86 @@
+server:
+  port: 8000
+  servlet:
+    context-path: /notifications
+
+spring:
+  application:
+    name: notification-service
+  config:
+    import: optional:nacos:${spring.application.name}.yml
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:nacos-server:8848}
+      config:
+        server-addr: ${NACOS_SERVER_ADDR:nacos-server:8848}
+    sentinel:
+      transport:
+        dashboard: ${SENTINEL_DASHBOARD_ADDR:sentinel-dashboard:8858}
+      eager: false
+      datasource:
+        flow:
+          nacos:
+            server-addr: ${NACOS_SERVER_ADDR:nacos-server:8848}
+            data-id: ${spring.application.name}-flow-rules
+            group-id: SENTINEL_GROUP
+            rule-type: flow
+        system:
+          nacos:
+            server-addr: ${NACOS_SERVER_ADDR:nacos-server:8848}
+            data-id: ${spring.application.name}-system-rules
+            group-id: SENTINEL_GROUP
+            rule-type: system
+  data:
+    mongodb:
+      host: ${MONGODB_HOST:mongodb}
+      port: ${MONGODB_PORT:27017}
+      username: ${MONGODB_USER:user}
+      password: ${MONGODB_PASSWORD:password}
+      database: piggymetrics
+      authentication-database: admin
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:465}
+    username: ${MAIL_USER:dev-user}
+    password: ${MAIL_PASSWORD:dev-password}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          socketFactory:
+            port: 465
+            class: javax.net.ssl.SSLSocketFactory
+            fallback: false
+          ssl:
+            enable: true
+
+remind:
+  cron: 0 0 0 * * *
+  email:
+    text: "Hey, {0}! We''ve missed you here on Duck Saver. It''s time to check your budget statistics.\r\n\r\nCheers,\r\nDuck Saver team"
+    subject: Duck Saver reminder
+
+backup:
+  cron: 0 0 12 * * *
+  email:
+    text: "Howdy, {0}. Your account backup is ready.\r\n\r\nCheers,\r\nDuck Saver team"
+    subject: Duck Saver account backup
+    attachment: backup.json
+
+feign:
+  sentinel:
+    enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

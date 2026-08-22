@@ -1,24 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>com.piggymetrics</groupId>
-	<artifactId>piggymetrics</artifactId>
+	<groupId>com.duck.saver</groupId>
+	<artifactId>duck-saver</artifactId>
 	<version>1.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
-	<name>piggymetrics</name>
+	<name>duck-saver</name>
 
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.0.3.RELEASE</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<version>3.2.12</version>
+		<relativePath/>
 	</parent>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<spring-cloud.version>Finchley.RELEASE</spring-cloud.version>
-		<java.version>1.8</java.version>
+		<java.version>17</java.version>
+		<spring-cloud.version>2023.0.3</spring-cloud.version>
+		<spring-cloud-alibaba.version>2023.0.1.3</spring-cloud-alibaba.version>
+		<sa-token.version>1.37.0</sa-token.version>
+		<springdoc.version>2.5.0</springdoc.version>
+		<testcontainers.version>1.21.4</testcontainers.version>
+		<jacoco.version>0.8.11</jacoco.version>
 	</properties>
 
 	<dependencyManagement>
@@ -30,19 +36,71 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
+			<dependency>
+				<groupId>com.alibaba.cloud</groupId>
+				<artifactId>spring-cloud-alibaba-dependencies</artifactId>
+				<version>${spring-cloud-alibaba.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>com.duck.saver</groupId>
+				<artifactId>common</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>cn.dev33</groupId>
+				<artifactId>sa-token-spring-boot3-starter</artifactId>
+				<version>${sa-token.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>cn.dev33</groupId>
+				<artifactId>sa-token-reactor-spring-boot3-starter</artifactId>
+				<version>${sa-token.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>cn.dev33</groupId>
+				<artifactId>sa-token-redis-jackson</artifactId>
+				<version>${sa-token.version}</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
-	
+
 	<modules>
-		<module>config</module>
-		<module>monitoring</module>
-		<module>registry</module>
+		<module>common</module>
 		<module>gateway</module>
 		<module>auth-service</module>
 		<module>account-service</module>
 		<module>statistics-service</module>
 		<module>notification-service</module>
-		<module>turbine-stream-service</module>
+		<module>ai-service</module>
+		<module>smoke-tests</module>
 	</modules>
+
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.jacoco</groupId>
+					<artifactId>jacoco-maven-plugin</artifactId>
+					<version>${jacoco.version}</version>
+					<executions>
+						<execution>
+							<goals>
+								<goal>prepare-agent</goal>
+							</goals>
+						</execution>
+						<execution>
+							<id>report</id>
+							<phase>test</phase>
+							<goals>
+								<goal>report</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
 
 </project>

@@ -1,0 +1,6 @@
+[
+  { "resource": "/accounts/current", "limitApp": "default", "grade": 1, "count": 100, "strategy": 0, "controlBehavior": 0, "clusterMode": false },
+  { "resource": "/current", "limitApp": "default", "grade": 1, "count": 100, "strategy": 0, "controlBehavior": 0, "clusterMode": false },
+  { "resource": "/accounts/demo", "limitApp": "default", "grade": 1, "count": 100, "strategy": 0, "controlBehavior": 0, "clusterMode": false },
+  { "resource": "/demo", "limitApp": "default", "grade": 1, "count": 100, "strategy": 0, "controlBehavior": 0, "clusterMode": false }
+]

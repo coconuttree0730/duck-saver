@@ -1,0 +1,4 @@
+[
+  { "resource": "/statistics/current", "limitApp": "default", "grade": 1, "count": 50, "strategy": 0, "controlBehavior": 0, "clusterMode": false },
+  { "resource": "/current", "limitApp": "default", "grade": 1, "count": 50, "strategy": 0, "controlBehavior": 0, "clusterMode": false }
+]

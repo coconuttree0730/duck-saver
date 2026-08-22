@@ -1,16 +1,16 @@
-hystrix:
-  command:
-    default:
-      execution:
-        isolation:
-          thread:
-            timeoutInMilliseconds: 20000
-
 spring:
-  data:
-    mongodb:
-      database: piggymetrics
-      port: 0
+  cloud:
+    nacos:
+      discovery:
+        enabled: false
+      config:
+        enabled: false
+    sentinel:
+      enabled: false
 
 rates:
-  url: https://api.exchangeratesapi.io
+  url: http://localhost:40888
+
+feign:
+  sentinel:
+    enabled: false

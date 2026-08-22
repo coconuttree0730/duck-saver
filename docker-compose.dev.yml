@@ -1,62 +1,56 @@
-version: '2.1'
+
+# 开发模式：只起基础设施容器，业务服务在 IDE 里跑
 services:
+  nacos-server:
+    image: nacos/nacos-server:v2.3.2
+    environment:
+      MODE: standalone
+      NACOS_AUTH_ENABLE: "false"
+    ports:
+      - 8848:8848
+      - 9848:9848
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - 6379:6379
+
+  mongodb:
+    image: mongo:7
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: user
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD:-password}
+    ports:
+      - 27017:27017
+    volumes:
+      - mongo-data:/data/db
+
   rabbitmq:
+    build: rabbitmq
     ports:
-      - 5672:5672
+      - 15673:5672
+      - 25672:15672
 
-  config:
-    build: config
+  sentinel-dashboard:
+    image: bladex/sentinel-dashboard:1.8.0
     ports:
-      - 8888:8888
+      - 8858:8858
 
-  registry:
-    build: registry
-
-  gateway:
-    build: gateway
-
-  auth-service:
-    build: auth-service
+  prometheus:
+    image: prom/prometheus:v2.51.2
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
-      - 5000:5000
+      - 9090:9090
 
-  auth-mongodb:
-    build: mongodb
+  grafana:
+    image: grafana/grafana:10.4.2
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
     ports:
-      - 25000:27017
+      - 3001:3000
+    depends_on:
+      - prometheus
 
-  account-service:
-    build: account-service
-    ports:
-      - 6000:6000
-
-  account-mongodb:
-    build: mongodb
-    ports:
-      - 26000:27017
-
-  statistics-service:
-    build: statistics-service
-    ports:
-      - 7000:7000
-
-  statistics-mongodb:
-    build: mongodb
-    ports:
-      - 27000:27017
-
-  notification-service:
-    build: notification-service
-    ports:
-      - 8000:8000
-
-  notification-mongodb:
-    build: mongodb
-    ports:
-      - 28000:27017
-
-  monitoring:
-    build: monitoring
-
-  turbine-stream-service:
-    build: turbine-stream-service
+volumes:
+  mongo-data:

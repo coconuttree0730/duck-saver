@@ -1,184 +1,152 @@
-version: '2.1'
+
 services:
+  nacos-server:
+    image: nacos/nacos-server:v2.3.2
+    environment:
+      MODE: standalone
+      NACOS_AUTH_ENABLE: "false"
+    ports:
+      - 127.0.0.1:8848:8848
+      - 127.0.0.1:9848:9848
+    restart: always
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - 127.0.0.1:16379:6379
+    restart: always
+
+  mongodb:
+    image: mongo:7
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: user
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD:-password}
+    ports:
+      - 127.0.0.1:27017:27017
+    volumes:
+      - mongo-data:/data/db
+    restart: always
+
   rabbitmq:
-    image: rabbitmq:3-management
-    restart: always
+    build: rabbitmq
     ports:
-      - 15672:15672
-    logging:
-      options:
-        max-size: "10m"
-        max-file: "10"
-
-  config:
-    environment:
-      CONFIG_SERVICE_PASSWORD: $CONFIG_SERVICE_PASSWORD
-    image: sqshq/piggymetrics-config
+      - 127.0.0.1:15673:5672
+      - 127.0.0.1:25672:15672
     restart: always
-    logging:
-      options:
-        max-size: "10m"
-        max-file: "10"
 
-  registry:
-    environment:
-      CONFIG_SERVICE_PASSWORD: $CONFIG_SERVICE_PASSWORD
-    image: sqshq/piggymetrics-registry
+  sentinel-dashboard:
+    image: bladex/sentinel-dashboard:1.8.0
+    ports:
+      - 127.0.0.1:8858:8858
     restart: always
+
+  prometheus:
+    image: prom/prometheus:v2.51.2
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - 127.0.0.1:9090:9090
+    restart: always
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    ports:
+      - 127.0.0.1:3001:3000
     depends_on:
-      config:
-        condition: service_healthy
-    ports:
-      - 8761:8761
-    logging:
-      options:
-        max-size: "10m"
-        max-file: "10"
+      - prometheus
+    restart: always
 
   gateway:
+    build: gateway
     environment:
-      CONFIG_SERVICE_PASSWORD: $CONFIG_SERVICE_PASSWORD
-    image: sqshq/piggymetrics-gateway
-    restart: always
-    depends_on:
-      config:
-        condition: service_healthy
+      NACOS_SERVER_ADDR: nacos-server:8848
+      REDIS_HOST: redis
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_CLOUD_GATEWAY_HTTPCLIENT_CONNECT_TIMEOUT: 10000
+      SPRING_CLOUD_GATEWAY_HTTPCLIENT_RESPONSE_TIMEOUT: 20s
     ports:
-      - 80:4000
-    logging:
-      options:
-        max-size: "10m"
-        max-file: "10"
+      - 127.0.0.1:4000:4000
+    depends_on:
+      - nacos-server
+      - redis
+    restart: always
 
   auth-service:
+    build: auth-service
+    ports:
+      - 127.0.0.1:5000:5000
     environment:
-      CONFIG_SERVICE_PASSWORD: $CONFIG_SERVICE_PASSWORD
-      NOTIFICATION_SERVICE_PASSWORD: $NOTIFICATION_SERVICE_PASSWORD
-      STATISTICS_SERVICE_PASSWORD: $STATISTICS_SERVICE_PASSWORD
-      ACCOUNT_SERVICE_PASSWORD: $ACCOUNT_SERVICE_PASSWORD
-      MONGODB_PASSWORD: $MONGODB_PASSWORD
-    image: sqshq/piggymetrics-auth-service
-    restart: always
+      NACOS_SERVER_ADDR: nacos-server:8848
+      SENTINEL_DASHBOARD_ADDR: sentinel-dashboard:8858
+      MONGODB_HOST: mongodb
+      REDIS_HOST: redis
     depends_on:
-      config:
-        condition: service_healthy
-    logging:
-      options:
-        max-size: "10m"
-        max-file: "10"
-
-  auth-mongodb:
-    environment:
-      MONGODB_PASSWORD: $MONGODB_PASSWORD
-    image: sqshq/piggymetrics-mongodb
+      - nacos-server
+      - mongodb
+      - redis
     restart: always
-    logging:
-      options:
-        max-size: "10m"
-        max-file: "10"
 
   account-service:
+    build: account-service
+    ports:
+      - 127.0.0.1:6000:6000
     environment:
-      CONFIG_SERVICE_PASSWORD: $CONFIG_SERVICE_PASSWORD
-      ACCOUNT_SERVICE_PASSWORD: $ACCOUNT_SERVICE_PASSWORD
-      MONGODB_PASSWORD: $MONGODB_PASSWORD
-    image: sqshq/piggymetrics-account-service
-    restart: always
+      NACOS_SERVER_ADDR: nacos-server:8848
+      SENTINEL_DASHBOARD_ADDR: sentinel-dashboard:8858
+      MONGODB_HOST: mongodb
     depends_on:
-      config:
-        condition: service_healthy
-    logging:
-      options:
-        max-size: "10m"
-        max-file: "10"
-
-  account-mongodb:
-    environment:
-      INIT_DUMP: account-service-dump.js
-      MONGODB_PASSWORD: $MONGODB_PASSWORD
-    image: sqshq/piggymetrics-mongodb
+      - nacos-server
+      - mongodb
     restart: always
-    logging:
-      options:
-        max-size: "10m"
-        max-file: "10"
 
   statistics-service:
+    build: statistics-service
+    ports:
+      - 127.0.0.1:7000:7000
     environment:
-      CONFIG_SERVICE_PASSWORD: $CONFIG_SERVICE_PASSWORD
-      MONGODB_PASSWORD: $MONGODB_PASSWORD
-      STATISTICS_SERVICE_PASSWORD: $STATISTICS_SERVICE_PASSWORD
-    image: sqshq/piggymetrics-statistics-service
-    restart: always
+      NACOS_SERVER_ADDR: nacos-server:8848
+      SENTINEL_DASHBOARD_ADDR: sentinel-dashboard:8858
+      MONGODB_HOST: mongodb
     depends_on:
-      config:
-        condition: service_healthy
-    logging:
-      options:
-        max-size: "10m"
-        max-file: "10"
-
-  statistics-mongodb:
-    environment:
-      MONGODB_PASSWORD: $MONGODB_PASSWORD
-    image: sqshq/piggymetrics-mongodb
+      - nacos-server
+      - mongodb
     restart: always
-    logging:
-      options:
-        max-size: "10m"
-        max-file: "10"
 
   notification-service:
-    environment:
-      CONFIG_SERVICE_PASSWORD: $CONFIG_SERVICE_PASSWORD
-      MONGODB_PASSWORD: $MONGODB_PASSWORD
-      NOTIFICATION_SERVICE_PASSWORD: $NOTIFICATION_SERVICE_PASSWORD
-    image: sqshq/piggymetrics-notification-service
-    restart: always
-    depends_on:
-      config:
-        condition: service_healthy
-    logging:
-      options:
-        max-size: "10m"
-        max-file: "10"
-
-  notification-mongodb:
-    image: sqshq/piggymetrics-mongodb
-    restart: always
-    environment:
-      MONGODB_PASSWORD: $MONGODB_PASSWORD
-    logging:
-      options:
-        max-size: "10m"
-        max-file: "10"
-
-  monitoring:
-    environment:
-      CONFIG_SERVICE_PASSWORD: $CONFIG_SERVICE_PASSWORD
-    image: sqshq/piggymetrics-monitoring
-    restart: always
-    depends_on:
-      config:
-        condition: service_healthy
+    build: notification-service
     ports:
-      - 9000:8080
-    logging:
-      options:
-        max-size: "10m"
-        max-file: "10"
-
-  turbine-stream-service:
+      - 127.0.0.1:8000:8000
     environment:
-      CONFIG_SERVICE_PASSWORD: $CONFIG_SERVICE_PASSWORD
-    image: sqshq/piggymetrics-turbine-stream-service
-    restart: always
+      NACOS_SERVER_ADDR: nacos-server:8848
+      SENTINEL_DASHBOARD_ADDR: sentinel-dashboard:8858
+      MONGODB_HOST: mongodb
     depends_on:
-      config:
-        condition: service_healthy
+      - nacos-server
+      - mongodb
+    restart: always
+
+  ai-service:
+    build: ai-service
     ports:
-    - 8989:8989
-    logging:
-      options:
-        max-size: "10m"
-        max-file: "10"
+      - 127.0.0.1:19000:9000
+    environment:
+      NACOS_SERVER_ADDR: nacos-server:8848
+      SENTINEL_DASHBOARD_ADDR: sentinel-dashboard:8858
+    depends_on:
+      - nacos-server
+    restart: always
+
+  nginx:
+    image: nginx:1.25-alpine
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - 127.0.0.1:80:80
+    depends_on:
+      - gateway
+    restart: always
+
+volumes:
+  mongo-data:

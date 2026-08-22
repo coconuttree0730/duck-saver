@@ -1,0 +1,17 @@
+spring:
+  cloud:
+    nacos:
+      discovery:
+        enabled: false
+      config:
+        enabled: false
+    gateway:
+      routes[0].id: auth-service
+      routes[0].uri: http://localhost:1
+      routes[0].predicates[0]: Path=/uaa/**
+  data.redis:
+    host: localhost
+    port: 6399
+
+sa-token:
+  token-name: satoken
