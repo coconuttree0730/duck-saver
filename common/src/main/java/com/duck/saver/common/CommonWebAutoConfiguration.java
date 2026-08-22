@@ -19,7 +19,7 @@ public class CommonWebAutoConfiguration {
 	}
 
 	@Bean
-	public ResultWrapAdvice apiResponseWrapAdvice(ObjectMapper objectMapper) {
+	public ResultWrapAdvice resultWrapAdvice(ObjectMapper objectMapper) {
 		return new ResultWrapAdvice(objectMapper);
 	}
 
