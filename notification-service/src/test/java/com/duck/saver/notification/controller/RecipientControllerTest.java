@@ -41,7 +41,7 @@ class RecipientControllerTest {
 	public void setup() throws Exception {
 		MockitoAnnotations.openMocks(this).close();
 		this.mockMvc = MockMvcBuilders.standaloneSetup(recipientController)
-				.setControllerAdvice(new com.duck.saver.common.web.GlobalExceptionHandler(), new com.duck.saver.common.web.ApiResponseWrapAdvice(mapper)).build();
+				.setControllerAdvice(new com.duck.saver.common.web.GlobalExceptionHandler(), new com.duck.saver.common.web.ResultWrapAdvice(mapper)).build();
 	}
 
 	@Test

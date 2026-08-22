@@ -2,7 +2,7 @@ package com.duck.saver.notification.service;
 
 import java.util.List;
 import java.util.Map;
-import com.duck.saver.common.api.ApiResponse;
+import com.duck.saver.common.api.Result;
 import com.duck.saver.notification.client.AccountServiceClient;
 import com.duck.saver.notification.domain.NotificationType;
 import com.duck.saver.notification.domain.Recipient;
@@ -48,7 +48,7 @@ class NotificationServiceImplTest {
 		withNoError.setAccountName("with-no-error");
 
 		when(client.getAccount(withError.getAccountName())).thenThrow(new RuntimeException());
-		when(client.getAccount(withNoError.getAccountName())).thenReturn(ApiResponse.ok(attachment));
+		when(client.getAccount(withNoError.getAccountName())).thenReturn(Result.success(attachment));
 
 		when(recipientService.findReadyToNotify(NotificationType.BACKUP)).thenReturn(List.of(withNoError, withError));
 

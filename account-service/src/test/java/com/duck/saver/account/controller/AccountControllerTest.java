@@ -47,7 +47,7 @@ class AccountControllerTest {
 	public void setup() throws Exception {
 		MockitoAnnotations.openMocks(this).close();
 		this.mockMvc = MockMvcBuilders.standaloneSetup(accountController)
-				.setControllerAdvice(new com.duck.saver.common.web.GlobalExceptionHandler(), new com.duck.saver.common.web.ApiResponseWrapAdvice(mapper))
+				.setControllerAdvice(new com.duck.saver.common.web.GlobalExceptionHandler(), new com.duck.saver.common.web.ResultWrapAdvice(mapper))
 				.build();
 	}
 
