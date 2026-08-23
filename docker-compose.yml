@@ -76,6 +76,7 @@ services:
       NACOS_SERVER_ADDR: nacos-server:8848
       REDIS_HOST: redis
       SPRING_DATA_REDIS_HOST: redis
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-duck-saver-dev-jwt-secret}
       SPRING_CLOUD_GATEWAY_HTTPCLIENT_CONNECT_TIMEOUT: 10000
       SPRING_CLOUD_GATEWAY_HTTPCLIENT_RESPONSE_TIMEOUT: 20s
     ports:
@@ -94,6 +95,7 @@ services:
       SENTINEL_DASHBOARD_ADDR: sentinel-dashboard:8858
       MONGODB_HOST: mongodb
       REDIS_HOST: redis
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-duck-saver-dev-jwt-secret}
     depends_on:
       - nacos-server
       - mongodb

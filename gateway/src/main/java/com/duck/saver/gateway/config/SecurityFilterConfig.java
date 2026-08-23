@@ -20,6 +20,7 @@ public class SecurityFilterConfig {
 
 	private static final String[] OPEN_PATHS = {
 			"/uaa/login",
+			"/uaa/token/refresh",
 			"/uaa/oauth2/**",
 			"/*/v3/api-docs/**",
 			"/*/swagger-ui/**",
