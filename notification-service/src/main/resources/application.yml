@@ -35,7 +35,7 @@ spring:
     url: jdbc:mysql://${MYSQL_HOST:mysql}:3306/duck_saver_notification?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
     username: ${MYSQL_USER:notification_user}
     password: ${MYSQL_PASSWORD:dev_password}
-      authentication-database: admin
+    authentication-database: admin
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:465}

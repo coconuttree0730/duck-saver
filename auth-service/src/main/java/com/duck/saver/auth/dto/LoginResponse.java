@@ -11,6 +11,7 @@ public class LoginResponse {
 	@JsonProperty("refresh_token")
 	private String refreshToken;
 
+	@JsonProperty("expires_in")
 	private Long expiresIn;
 
 	public LoginResponse() {

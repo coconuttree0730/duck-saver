@@ -7,6 +7,7 @@ import com.duck.saver.auth.dto.LoginResponse;
 import com.duck.saver.auth.service.RefreshTokenService;
 import com.duck.saver.auth.service.UserService;
 import jakarta.validation.Valid;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -56,7 +57,7 @@ public class AuthController {
 		return new ResultHolder("logged out");
 	}
 
-	public record RefreshRequest(@NotBlank String refreshToken) {
+	public record RefreshRequest(@NotBlank @JsonProperty("refresh_token") String refreshToken) {
 	}
 
 	public record ResultHolder(String status) {

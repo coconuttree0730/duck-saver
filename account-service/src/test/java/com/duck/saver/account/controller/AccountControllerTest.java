@@ -60,7 +60,7 @@ class AccountControllerTest {
 
 		when(accountService.findByName("test")).thenReturn(response);
 
-		mockMvc.perform(get("/current").principal(new UserPrincipal("test")))
+		mockMvc.perform(get("/accounts/current").principal(new UserPrincipal("test")))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.code").value(200))
 				.andExpect(jsonPath("$.data.name").value("test"))
@@ -78,7 +78,7 @@ class AccountControllerTest {
 				{ "name": "new-account", "currency": "CNY" }
 				""";
 
-		mockMvc.perform(post("/").contentType(MediaType.APPLICATION_JSON).content(json))
+		mockMvc.perform(post("/accounts").contentType(MediaType.APPLICATION_JSON).content(json))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.data.name").value("new-account"));
 	}
@@ -88,7 +88,7 @@ class AccountControllerTest {
 
 		String json = "{ \"currency\": \"CNY\" }";
 
-		mockMvc.perform(post("/").contentType(MediaType.APPLICATION_JSON).content(json))
+		mockMvc.perform(post("/accounts").contentType(MediaType.APPLICATION_JSON).content(json))
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.code").value(400));
 	}
@@ -101,7 +101,7 @@ class AccountControllerTest {
 				  "category": "餐饮", "type": "EXPENSE", "date": "2026-08-23" }
 				""";
 
-		mockMvc.perform(post("/demo/items").contentType(MediaType.APPLICATION_JSON).content(json))
+		mockMvc.perform(post("/accounts/demo/items").contentType(MediaType.APPLICATION_JSON).content(json))
 				.andExpect(status().isOk());
 
 		verify(accountService, times(1)).addItem(eq("demo"), any(TransactionItemRequest.class));
@@ -110,7 +110,7 @@ class AccountControllerTest {
 	@Test
 	public void shouldDeleteTransactionItem() throws Exception {
 
-		mockMvc.perform(delete("/demo/items/some-uuid"))
+		mockMvc.perform(delete("/accounts/demo/items/some-uuid"))
 				.andExpect(status().isOk());
 
 		verify(accountService, times(1)).deleteItem("demo", "some-uuid");
@@ -119,11 +119,11 @@ class AccountControllerTest {
 	@Test
 	public void shouldUpdateAndDeleteAccount() throws Exception {
 
-		mockMvc.perform(put("/test").contentType(MediaType.APPLICATION_JSON).content("{ \"currency\": \"USD\" }"))
+		mockMvc.perform(put("/accounts/test").contentType(MediaType.APPLICATION_JSON).content("{ \"currency\": \"USD\" }"))
 				.andExpect(status().isOk());
 		verify(accountService, times(1)).update(eq("test"), any());
 
-		mockMvc.perform(delete("/test")).andExpect(status().isOk());
+		mockMvc.perform(delete("/accounts/test")).andExpect(status().isOk());
 		verify(accountService, times(1)).delete("test");
 	}
 

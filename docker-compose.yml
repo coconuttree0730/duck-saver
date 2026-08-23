@@ -16,17 +16,6 @@ services:
       - 127.0.0.1:16379:6379
     restart: always
 
-  mongodb:
-    image: mongo:7
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: user
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD:-password}
-    ports:
-      - 127.0.0.1:27017:27017
-    volumes:
-      - mongo-data:/data/db
-    restart: always
-
   rabbitmq:
     build: rabbitmq
     ports:
@@ -98,7 +87,7 @@ services:
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-duck-saver-dev-jwt-secret}
     depends_on:
       - nacos-server
-      - mongodb
+      - mysql
       - redis
     restart: always
 
@@ -112,7 +101,7 @@ services:
       MYSQL_HOST: mysql
     depends_on:
       - nacos-server
-      - mongodb
+      - mysql
     restart: always
 
   statistics-service:
@@ -163,5 +152,4 @@ services:
     restart: always
 
 volumes:
-  mongo-data:
   mysql-data:

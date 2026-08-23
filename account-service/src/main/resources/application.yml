@@ -1,7 +1,5 @@
 server:
   port: 6000
-  servlet:
-    context-path: /accounts
 
 spring:
   application:
@@ -35,7 +33,7 @@ spring:
     url: jdbc:mysql://${MYSQL_HOST:mysql}:3306/duck_saver_account?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
     username: ${MYSQL_USER:account_user}
     password: ${MYSQL_PASSWORD:dev_password}
-      authentication-database: admin
+    authentication-database: admin
 
 feign:
   sentinel:
@@ -52,7 +50,9 @@ management:
 
 springdoc:
   swagger-ui:
-    path: /swagger-ui.html
+    path: /accounts/swagger-ui.html
+  api-docs:
+    path: /accounts/v3/api-docs
 
 logging:
   level:

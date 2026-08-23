@@ -15,16 +15,6 @@ services:
     ports:
       - 6379:6379
 
-  mongodb:
-    image: mongo:7
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: user
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD:-password}
-    ports:
-      - 27017:27017
-    volumes:
-      - mongo-data:/data/db
-
   rabbitmq:
     build: rabbitmq
     ports:
@@ -64,5 +54,4 @@ services:
       - prometheus
 
 volumes:
-  mongo-data:
   mysql-data:

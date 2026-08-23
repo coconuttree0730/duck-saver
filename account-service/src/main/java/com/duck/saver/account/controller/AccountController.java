@@ -23,42 +23,42 @@ public class AccountController {
 	@Autowired
 	private AccountService accountService;
 
-	@GetMapping(path = "/current")
+	@GetMapping(path = "/accounts/current")
 	public AccountResponse getCurrentAccount(Principal principal) {
 		return accountService.findByName(principal.getName());
 	}
 
-	@PostMapping(path = { "/", "" })
+	@PostMapping(path = "/accounts")
 	public AccountResponse createNewAccount(@Valid @RequestBody CreateAccountRequest request) {
 		return accountService.create(request);
 	}
 
-	@GetMapping(path = "/demo")
+	@GetMapping(path = "/accounts/demo")
 	public AccountResponse getDemoAccount() {
 		return accountService.demo();
 	}
 
-	@GetMapping(path = "/{name}")
+	@GetMapping(path = "/accounts/{name}")
 	public AccountResponse getAccountByName(@PathVariable String name) {
 		return accountService.findByName(name);
 	}
 
-	@PutMapping(path = "/{name}")
+	@PutMapping(path = "/accounts/{name}")
 	public void updateAccount(@PathVariable String name, @Valid @RequestBody UpdateAccountRequest request) {
 		accountService.update(name, request);
 	}
 
-	@DeleteMapping(path = "/{name}")
+	@DeleteMapping(path = "/accounts/{name}")
 	public void deleteAccount(@PathVariable String name) {
 		accountService.delete(name);
 	}
 
-	@PostMapping(path = "/{name}/items")
+	@PostMapping(path = "/accounts/{name}/items")
 	public void addItem(@PathVariable String name, @Valid @RequestBody TransactionItemRequest request) {
 		accountService.addItem(name, request);
 	}
 
-	@DeleteMapping(path = "/{name}/items/{itemId}")
+	@DeleteMapping(path = "/accounts/{name}/items/{itemId}")
 	public void deleteItem(@PathVariable String name, @PathVariable String itemId) {
 		accountService.deleteItem(name, itemId);
 	}
