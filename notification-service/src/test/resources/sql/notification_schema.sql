@@ -1,5 +1,4 @@
 -- duck_saver_notification：通知接收人 · 通知配置
-USE duck_saver_notification;
 
 CREATE TABLE IF NOT EXISTS recipient (
     id           BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',

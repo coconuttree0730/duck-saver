@@ -1,25 +1,13 @@
 package com.duck.saver.notification.domain;
 
-import org.hibernate.validator.constraints.Email;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-import java.util.Map;
-
-@Document(collection = "recipients")
+/**
+ * 邮件发送场景的接收人值对象。
+ */
 public class Recipient {
 
-	@Id
 	private String accountName;
 
-	@NotNull
-	@Email
 	private String email;
-
-	@Valid
-	private Map<NotificationType, NotificationSettings> scheduledNotifications;
 
 	public String getAccountName() {
 		return accountName;
@@ -35,21 +23,5 @@ public class Recipient {
 
 	public void setEmail(String email) {
 		this.email = email;
-	}
-
-	public Map<NotificationType, NotificationSettings> getScheduledNotifications() {
-		return scheduledNotifications;
-	}
-
-	public void setScheduledNotifications(Map<NotificationType, NotificationSettings> scheduledNotifications) {
-		this.scheduledNotifications = scheduledNotifications;
-	}
-
-	@Override
-	public String toString() {
-		return "Recipient{" +
-				"accountName='" + accountName + '\'' +
-				", email='" + email + '\'' +
-				'}';
 	}
 }

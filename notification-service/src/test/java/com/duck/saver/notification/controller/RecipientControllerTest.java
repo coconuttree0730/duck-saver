@@ -1,24 +1,24 @@
 package com.duck.saver.notification.controller;
 
 import java.util.List;
-import java.util.Map;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.duck.saver.notification.domain.Frequency;
-import com.duck.saver.notification.domain.NotificationSettings;
-import com.duck.saver.notification.domain.NotificationType;
-import com.duck.saver.notification.domain.Recipient;
+import com.duck.saver.notification.dto.NotificationConfigResponse;
+import com.duck.saver.notification.dto.RecipientInfoResponse;
+import com.duck.saver.notification.dto.RecipientResponse;
+import com.duck.saver.notification.dto.SaveRecipientRequest;
 import com.duck.saver.notification.service.RecipientService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.security.auth.UserPrincipal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockitoAnnotations;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.mockito.MockitoAnnotations;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -41,50 +41,52 @@ class RecipientControllerTest {
 	public void setup() throws Exception {
 		MockitoAnnotations.openMocks(this).close();
 		this.mockMvc = MockMvcBuilders.standaloneSetup(recipientController)
-				.setControllerAdvice(new com.duck.saver.common.web.GlobalExceptionHandler(), new com.duck.saver.common.web.ResultWrapAdvice(mapper)).build();
-	}
-
-	@Test
-	public void shouldSaveCurrentRecipientSettings() throws Exception {
-
-		Recipient recipient = getStubRecipient();
-		String json = mapper.writeValueAsString(recipient);
-
-		mockMvc.perform(put("/recipients/current").principal(new UserPrincipal(recipient.getAccountName())).contentType(MediaType.APPLICATION_JSON).content(json))
-				.andExpect(status().isOk());
+				.setControllerAdvice(new com.duck.saver.common.web.GlobalExceptionHandler(),
+						new com.duck.saver.common.web.ResultWrapAdvice(mapper))
+				.build();
 	}
 
 	@Test
 	public void shouldGetCurrentRecipientSettings() throws Exception {
 
-		Recipient recipient = getStubRecipient();
-		when(recipientService.findByAccountName(recipient.getAccountName())).thenReturn(recipient);
+		when(recipientService.findByAccountName("test")).thenReturn(stubResponse());
 
-		mockMvc.perform(get("/recipients/current").principal(new UserPrincipal(recipient.getAccountName())))
-				.andExpect(jsonPath("$.data.accountName").value(recipient.getAccountName()))
-				.andExpect(status().isOk());
+		mockMvc.perform(get("/recipients/current").principal(new UserPrincipal("test")))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.code").value(200))
+				.andExpect(jsonPath("$.data.recipient.name").value("test"))
+				.andExpect(jsonPath("$.data.recipient.frequency").value("WEEKLY"))
+				.andExpect(jsonPath("$.data.notificationConfig[0].type").value("BACKUP"));
 	}
 
-	private Recipient getStubRecipient() {
+	@Test
+	public void shouldSaveCurrentRecipientSettings() throws Exception {
 
-		NotificationSettings remind = new NotificationSettings();
-		remind.setActive(true);
-		remind.setFrequency(Frequency.WEEKLY);
-		remind.setLastNotified(null);
+		when(recipientService.save(eq("test"), any(SaveRecipientRequest.class))).thenReturn(stubResponse());
 
-		NotificationSettings backup = new NotificationSettings();
-		backup.setActive(false);
-		backup.setFrequency(Frequency.MONTHLY);
-		backup.setLastNotified(null);
+		String json = """
+				{ "email": "test@example.com", "frequency": "WEEKLY", "enabled": true }
+				""";
 
-		Recipient recipient = new Recipient();
-		recipient.setAccountName("test");
-		recipient.setEmail("test@test.com");
-		recipient.setScheduledNotifications(Map.of(
-				NotificationType.BACKUP, backup,
-				NotificationType.REMIND, remind
-		));
+		mockMvc.perform(put("/recipients/current").principal(new UserPrincipal("test"))
+						.contentType(MediaType.APPLICATION_JSON).content(json))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.data.recipient.email").value("test@example.com"));
+	}
 
-		return recipient;
+	private RecipientResponse stubResponse() {
+
+		RecipientInfoResponse info = new RecipientInfoResponse();
+		info.setName("test");
+		info.setEmail("test@example.com");
+		info.setFrequency("WEEKLY");
+		info.setEnabled(true);
+
+		RecipientResponse response = new RecipientResponse();
+		response.setRecipient(info);
+		response.setNotificationConfig(List.of(
+				new NotificationConfigResponse("BACKUP", "0 0 12 * * *"),
+				new NotificationConfigResponse("BILL_REMINDER", "0 0 10 1 * *")));
+		return response;
 	}
 }

@@ -1,10 +1,10 @@
 package com.duck.saver.notification.service;
 
-import com.duck.saver.common.api.Result;
-import com.duck.saver.common.api.ResultCode;
 import com.duck.saver.notification.client.AccountServiceClient;
 import com.duck.saver.notification.domain.NotificationType;
-import com.duck.saver.notification.domain.Recipient;
+import com.duck.saver.notification.entity.NotificationConfigEntity;
+import com.duck.saver.notification.entity.RecipientEntity;
+import com.duck.saver.notification.mapper.RecipientMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,26 +28,34 @@ public class NotificationServiceImpl implements NotificationService {
 	@Autowired
 	private EmailService emailService;
 
+	@Autowired
+	private RecipientMapper recipientMapper;
+
 	@Override
 	@Scheduled(cron = "${backup.cron}")
 	public void sendBackupNotifications() {
 
 		final NotificationType type = NotificationType.BACKUP;
 
-		List<Recipient> recipients = recipientService.findReadyToNotify(type);
-		log.info("found {} recipients for backup notification", recipients.size());
+		List<NotificationConfigEntity> configs = recipientService.findReadyToNotify(RecipientService.TYPE_BACKUP);
+		log.info("found {} configs for backup notification", configs.size());
 
-		recipients.forEach(recipient -> CompletableFuture.runAsync(() -> {
+		configs.forEach(config -> CompletableFuture.runAsync(() -> {
 			try {
-				Result<String> accountBackup = client.getAccount(recipient.getAccountName());
-				if (accountBackup.getCode() != ResultCode.SUCCESS.getCode()) {
-					log.error("skip backup notification for {}: {}", recipient, accountBackup.getMessage());
+				RecipientEntity recipient = recipientMapper.selectById(config.getRecipientId());
+				if (recipient == null) {
 					return;
 				}
-				emailService.send(type, recipient, accountBackup.getData());
-				recipientService.markNotified(type, recipient);
+				com.duck.saver.common.api.Result<String> accountBackup =
+						client.getAccount(recipient.getAccountName());
+				String attachment = com.duck.saver.common.api.ResultCode.SUCCESS.getCode() == accountBackup.getCode()
+						? accountBackup.getData()
+						: null;
+
+				emailService.send(type, toDomainRecipient(recipient), attachment);
+				recipientService.markNotified(config);
 			} catch (Throwable t) {
-				log.error("an error during backup notification for {}", recipient, t);
+				log.error("an error during backup notification for config {}", config.getId(), t);
 			}
 		}));
 	}
@@ -56,18 +64,29 @@ public class NotificationServiceImpl implements NotificationService {
 	@Scheduled(cron = "${remind.cron}")
 	public void sendRemindNotifications() {
 
-		final NotificationType type = NotificationType.REMIND;
+		final NotificationType type = NotificationType.BILL_REMINDER;
 
-		List<Recipient> recipients = recipientService.findReadyToNotify(type);
-		log.info("found {} recipients for remind notification", recipients.size());
+		List<NotificationConfigEntity> configs = recipientService.findReadyToNotify(RecipientService.TYPE_BILL_REMINDER);
+		log.info("found {} configs for remind notification", configs.size());
 
-		recipients.forEach(recipient -> CompletableFuture.runAsync(() -> {
+		configs.forEach(config -> CompletableFuture.runAsync(() -> {
 			try {
-				emailService.send(type, recipient, null);
-				recipientService.markNotified(type, recipient);
+				RecipientEntity recipient = recipientMapper.selectById(config.getRecipientId());
+				if (recipient == null) {
+					return;
+				}
+				emailService.send(type, toDomainRecipient(recipient), null);
+				recipientService.markNotified(config);
 			} catch (Throwable t) {
-				log.error("an error during remind notification for {}", recipient, t);
+				log.error("an error during remind notification for config {}", config.getId(), t);
 			}
 		}));
+	}
+
+	private com.duck.saver.notification.domain.Recipient toDomainRecipient(RecipientEntity entity) {
+		com.duck.saver.notification.domain.Recipient recipient = new com.duck.saver.notification.domain.Recipient();
+		recipient.setAccountName(entity.getAccountName());
+		recipient.setEmail(entity.getEmail());
+		return recipient;
 	}
 }
