@@ -18,7 +18,7 @@
 
 - Java 17 · Spring Boot 3.2.x · Spring Cloud 2023.0.x
 - 注册/配置 Nacos 2.3.x · 网关 Spring Cloud Gateway · 熔断限流 Sentinel 1.8.x
-- 认证 Sa-Token 1.37.x · ORM MyBatis Plus 3.5.x · MySQL 8
+- 认证 Sa-Token 1.44.x（sa-token-jwt Mixin + 自实现 refresh_token 轮换）· ORM MyBatis Plus 3.5.x · MySQL 8
 - 缓存 Caffeine 3（L1）+ Redis 7（L2）· 分布式锁 Redisson
 - 消息 RabbitMQ 3（含 delayed_message_exchange 延迟消息插件）
 - 可观测 SkyWalking 9 · Prometheus · Grafana · Loki/Promtail · 文档 springdoc-openapi 2.x

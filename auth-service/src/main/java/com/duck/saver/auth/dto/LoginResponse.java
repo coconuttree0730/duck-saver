@@ -1,17 +1,26 @@
 package com.duck.saver.auth.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class LoginResponse {
 
 	private String tokenName;
 
 	private String tokenValue;
 
+	@JsonProperty("refresh_token")
+	private String refreshToken;
+
+	private Long expiresIn;
+
 	public LoginResponse() {
 	}
 
-	public LoginResponse(String tokenName, String tokenValue) {
+	public LoginResponse(String tokenName, String tokenValue, String refreshToken, Long expiresIn) {
 		this.tokenName = tokenName;
 		this.tokenValue = tokenValue;
+		this.refreshToken = refreshToken;
+		this.expiresIn = expiresIn;
 	}
 
 	public String getTokenName() {
@@ -28,5 +37,21 @@ public class LoginResponse {
 
 	public void setTokenValue(String tokenValue) {
 		this.tokenValue = tokenValue;
+	}
+
+	public String getRefreshToken() {
+		return refreshToken;
+	}
+
+	public void setRefreshToken(String refreshToken) {
+		this.refreshToken = refreshToken;
+	}
+
+	public Long getExpiresIn() {
+		return expiresIn;
+	}
+
+	public void setExpiresIn(Long expiresIn) {
+		this.expiresIn = expiresIn;
 	}
 }
