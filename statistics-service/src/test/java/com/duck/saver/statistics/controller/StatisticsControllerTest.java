@@ -1,43 +1,30 @@
 package com.duck.saver.statistics.controller;
 
-import com.duck.saver.common.web.ResultWrapAdvice;
-import com.duck.saver.common.web.GlobalExceptionHandler;
 import com.duck.saver.statistics.domain.Account;
-import com.duck.saver.statistics.domain.Currency;
-import com.duck.saver.statistics.domain.Item;
-import com.duck.saver.statistics.domain.Saving;
-import com.duck.saver.statistics.domain.TimePeriod;
-import com.duck.saver.statistics.domain.timeseries.DataPoint;
-import com.duck.saver.statistics.domain.timeseries.DataPointId;
+import com.duck.saver.statistics.dto.StatisticsResponse;
 import com.duck.saver.statistics.service.StatisticsService;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sun.security.auth.UserPrincipal;
+
+import static org.mockito.ArgumentMatchers.any;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.math.BigDecimal;
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class StatisticsControllerTest {
-
-	private static final ObjectMapper mapper = new ObjectMapper();
 
 	@InjectMocks
 	private StatisticsController statisticsController;
@@ -51,71 +38,47 @@ class StatisticsControllerTest {
 	public void setup() throws Exception {
 		MockitoAnnotations.openMocks(this).close();
 		this.mockMvc = MockMvcBuilders.standaloneSetup(statisticsController)
-				.setControllerAdvice(new GlobalExceptionHandler(), new ResultWrapAdvice(mapper))
+				.setControllerAdvice(new com.duck.saver.common.web.GlobalExceptionHandler(),
+						new com.duck.saver.common.web.ResultWrapAdvice(new com.fasterxml.jackson.databind.ObjectMapper()))
 				.build();
 	}
 
 	@Test
-	public void shouldGetStatisticsByAccountName() throws Exception {
+	public void shouldGetAggregateByAccountName() throws Exception {
 
-		final DataPoint dataPoint = new DataPoint();
-		dataPoint.setId(new DataPointId("test", new Date()));
+		StatisticsResponse response = new StatisticsResponse();
+		response.setAccount("test");
+		response.setExpense(new com.duck.saver.statistics.dto.MetricResponse(
+				new BigDecimal("48"), BigDecimal.ZERO, BigDecimal.ZERO));
+		response.setIncome(new com.duck.saver.statistics.dto.MetricResponse(
+				new BigDecimal("15000"), BigDecimal.ZERO, BigDecimal.ZERO));
+		response.setSaving(new com.duck.saver.statistics.dto.MetricResponse(
+				new BigDecimal("5000"), BigDecimal.ZERO, BigDecimal.ZERO));
+		response.setCashflow(List.of(new com.duck.saver.statistics.dto.CashflowEntry(
+				LocalDate.now(), new BigDecimal("15000"), new BigDecimal("48"), new BigDecimal("5000"))));
 
-		when(statisticsService.findByAccountName(dataPoint.getId().getAccount()))
-				.thenReturn(List.of(dataPoint));
+		org.mockito.Mockito.when(statisticsService.findByAccountName("test")).thenReturn(response);
 
-		mockMvc.perform(get("/test").principal(new UserPrincipal(dataPoint.getId().getAccount())))
-				.andExpect(jsonPath("$.data[0].id.account").value(dataPoint.getId().getAccount()))
+		mockMvc.perform(get("/test").principal(new com.sun.security.auth.UserPrincipal("test")))
+				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.code").value(200))
-				.andExpect(status().isOk());
-	}
-
-	@Test
-	public void shouldGetCurrentAccountStatistics() throws Exception {
-
-		final DataPoint dataPoint = new DataPoint();
-		dataPoint.setId(new DataPointId("test", new Date()));
-
-		when(statisticsService.findByAccountName(dataPoint.getId().getAccount()))
-				.thenReturn(List.of(dataPoint));
-
-		mockMvc.perform(get("/current").principal(new UserPrincipal(dataPoint.getId().getAccount())))
-				.andExpect(jsonPath("$.data[0].id.account").value(dataPoint.getId().getAccount()))
-				.andExpect(status().isOk());
+				.andExpect(jsonPath("$.data.account").value("test"))
+				.andExpect(jsonPath("$.data.expense.currentValue").value(48))
+				.andExpect(jsonPath("$.data.cashflow[0].income").value(15000));
 	}
 
 	@Test
 	public void shouldSaveAccountStatistics() throws Exception {
 
-		Saving saving = new Saving();
-		saving.setAmount(new BigDecimal(1500));
-		saving.setCurrency(Currency.USD);
-		saving.setInterest(new BigDecimal("3.32"));
-		saving.setDeposit(true);
-		saving.setCapitalization(false);
+		String json = """
+				{ "incomes": [ { "title": "Salary", "amount": 9100 } ],
+				  "expenses": [ { "title": "Grocery", "amount": 10 } ],
+				  "saving": { "amount": 1500 } }
+				""";
 
-		Item grocery = new Item();
-		grocery.setTitle("Grocery");
-		grocery.setAmount(new BigDecimal(10));
-		grocery.setCurrency(Currency.USD);
-		grocery.setPeriod(TimePeriod.DAY);
-
-		Item salary = new Item();
-		salary.setTitle("Salary");
-		salary.setAmount(new BigDecimal(9100));
-		salary.setCurrency(Currency.USD);
-		salary.setPeriod(TimePeriod.MONTH);
-
-		final Account account = new Account();
-		account.setSaving(saving);
-		account.setExpenses(List.of(grocery));
-		account.setIncomes(List.of(salary));
-
-		String json = mapper.writeValueAsString(account);
-
-		mockMvc.perform(put("/test").contentType(MediaType.APPLICATION_JSON).content(json))
+		mockMvc.perform(put("/test").contentType(org.springframework.http.MediaType.APPLICATION_JSON).content(json))
 				.andExpect(status().isOk());
 
-		verify(statisticsService, times(1)).save(anyString(), any(Account.class));
+		verify(statisticsService, times(1)).save(org.mockito.ArgumentMatchers.eq("test"), any(Account.class));
 	}
 }

@@ -1,110 +1,151 @@
 package com.duck.saver.statistics.service;
 
-import java.util.Map;
-import com.duck.saver.statistics.domain.*;
-import com.duck.saver.statistics.domain.timeseries.DataPoint;
-import com.duck.saver.statistics.domain.timeseries.DataPointId;
-import com.duck.saver.statistics.domain.timeseries.ItemMetric;
-import com.duck.saver.statistics.domain.timeseries.StatisticMetric;
-import com.duck.saver.statistics.repository.DataPointRepository;
+import com.duck.saver.statistics.domain.Account;
+import com.duck.saver.statistics.dto.CashflowEntry;
+import com.duck.saver.statistics.dto.MetricResponse;
+import com.duck.saver.statistics.dto.StatisticsResponse;
+import com.duck.saver.statistics.entity.DataPointEntity;
+import com.duck.saver.statistics.mapper.DataPointMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.Assert;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneId;
-import java.util.Date;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 public class StatisticsServiceImpl implements StatisticsService {
 
-	private final Logger log = LoggerFactory.getLogger(getClass());
+	private static final Logger log = LoggerFactory.getLogger(StatisticsServiceImpl.class);
 
 	@Autowired
-	private DataPointRepository repository;
+	private DataPointMapper dataPointMapper;
 
-	@Autowired
-	private ExchangeRatesService ratesService;
-
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
-	public List<DataPoint> findByAccountName(String accountName) {
-		Assert.hasLength(accountName, "accountName must have length");
-		return repository.findByIdAccount(accountName);
+	public StatisticsResponse findByAccountName(String accountName) {
+
+		List<DataPointEntity> points = dataPointMapper.selectList(
+				new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<DataPointEntity>()
+						.eq(DataPointEntity::getAccountName, accountName)
+						.orderByAsc(DataPointEntity::getDate));
+
+		StatisticsResponse response = new StatisticsResponse();
+		response.setAccount(accountName);
+		response.setCashflow(points.stream()
+				.map(p -> {
+					BigDecimal[] amounts = amountsOf(p);
+					return new CashflowEntry(p.getDate(), amounts[1], amounts[0], amounts[2]);
+				})
+				.toList());
+
+		if (points.isEmpty()) {
+			response.setExpense(new MetricResponse(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO));
+			response.setIncome(new MetricResponse(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO));
+			response.setSaving(new MetricResponse(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO));
+			return response;
+		}
+
+		DataPointEntity latest = points.get(points.size() - 1);
+		DataPointEntity previous = points.size() > 1 ? points.get(points.size() - 2) : null;
+
+		BigDecimal[] latestAmounts = amountsOf(latest); // [expense, income, saving]
+		BigDecimal[] previousAmounts = previous != null ? amountsOf(previous)
+				: new BigDecimal[]{BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO};
+
+		response.setExpense(metric(latestAmounts[0], previousAmounts[0]));
+		response.setIncome(metric(latestAmounts[1], previousAmounts[1]));
+		response.setSaving(metric(latestAmounts[2], previousAmounts[2]));
+		return response;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 */
 	@Override
-	public DataPoint save(String accountName, Account account) {
+	public void save(String accountName, Account account) {
 
-		Instant instant = LocalDate.now().atStartOfDay()
-				.atZone(ZoneId.systemDefault()).toInstant();
+		LocalDate today = LocalDate.now();
 
-		DataPointId pointId = new DataPointId(accountName, Date.from(instant));
+		BigDecimal incomesTotal = total(account.getIncomes());
+		BigDecimal expensesTotal = total(account.getExpenses());
+		BigDecimal savingAmount = account.getSaving() != null && account.getSaving().getAmount() != null
+				? account.getSaving().getAmount()
+				: BigDecimal.ZERO;
 
-		Set<ItemMetric> incomes = account.getIncomes().stream()
-				.map(this::createItemMetric)
-				.collect(Collectors.toSet());
+		String statisticsJson = """
+				{"INCOMES_AMOUNT": %s, "EXPENSES_AMOUNT": %s, "SAVING_AMOUNT": %s}"""
+				.formatted(incomesTotal, expensesTotal, savingAmount);
 
-		Set<ItemMetric> expenses = account.getExpenses().stream()
-				.map(this::createItemMetric)
-				.collect(Collectors.toSet());
+		DataPointEntity existing = dataPointMapper.selectOne(
+				new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<DataPointEntity>()
+						.eq(DataPointEntity::getAccountName, accountName)
+						.eq(DataPointEntity::getDate, today));
 
-		Map<StatisticMetric, BigDecimal> statistics = createStatisticMetrics(incomes, expenses, account.getSaving());
+		DataPointEntity point = existing != null ? existing : new DataPointEntity();
+		point.setAccountName(accountName);
+		point.setDate(today);
+		point.setIncomes(itemsJson(account.getIncomes()));
+		point.setExpenses(itemsJson(account.getExpenses()));
+		point.setStatistics(statisticsJson);
 
-		DataPoint dataPoint = new DataPoint();
-		dataPoint.setId(pointId);
-		dataPoint.setIncomes(incomes);
-		dataPoint.setExpenses(expenses);
-		dataPoint.setStatistics(statistics);
-		dataPoint.setRates(ratesService.getCurrentRates());
+		if (existing != null) {
+			dataPointMapper.updateById(point);
+		} else {
+			dataPointMapper.insert(point);
+		}
 
-		log.debug("new datapoint has been created: {}", pointId);
-
-		return repository.save(dataPoint);
+		log.debug("datapoint saved for {} at {}", accountName, today);
 	}
 
-	private Map<StatisticMetric, BigDecimal> createStatisticMetrics(Set<ItemMetric> incomes, Set<ItemMetric> expenses, Saving saving) {
-
-		BigDecimal savingAmount = ratesService.convert(saving.getCurrency(), Currency.getBase(), saving.getAmount());
-
-		BigDecimal expensesAmount = expenses.stream()
-				.map(ItemMetric::getAmount)
-				.reduce(BigDecimal.ZERO, BigDecimal::add);
-
-		BigDecimal incomesAmount = incomes.stream()
-				.map(ItemMetric::getAmount)
-				.reduce(BigDecimal.ZERO, BigDecimal::add);
-
-		return Map.of(
-				StatisticMetric.EXPENSES_AMOUNT, expensesAmount,
-				StatisticMetric.INCOMES_AMOUNT, incomesAmount,
-				StatisticMetric.SAVING_AMOUNT, savingAmount
-		);
+	private BigDecimal[] amountsOf(DataPointEntity point) {
+		// statistics JSON: {INCOMES_AMOUNT: x, EXPENSES_AMOUNT: y, SAVING_AMOUNT: z}
+		String json = point.getStatistics() == null ? "{}" : point.getStatistics();
+		return new BigDecimal[]{
+				extract(json, "EXPENSES_AMOUNT"),
+				extract(json, "INCOMES_AMOUNT"),
+				extract(json, "SAVING_AMOUNT")
+		};
 	}
 
-	/**
-	 * Normalizes given item amount to {@link Currency#getBase()} currency with
-	 * {@link TimePeriod#getBase()} time period
-	 */
-	private ItemMetric createItemMetric(Item item) {
+	private BigDecimal extract(String json, String key) {
+		int idx = json.indexOf(key);
+		if (idx < 0) {
+			return BigDecimal.ZERO;
+		}
+		int colon = json.indexOf(':', idx);
+		int comma = json.indexOf(',', colon);
+		int end = comma < 0 ? json.indexOf('}', colon) : comma;
+		try {
+			return new BigDecimal(json.substring(colon + 1, end).trim());
+		} catch (Exception e) {
+			return BigDecimal.ZERO;
+		}
+	}
 
-		BigDecimal amount = ratesService
-				.convert(item.getCurrency(), Currency.getBase(), item.getAmount())
-				.divide(item.getPeriod().getBaseRatio(), 4, RoundingMode.HALF_UP);
+	private String itemsJson(List<Account.Item> items) {
+		StringBuilder sb = new StringBuilder("[");
+		for (int i = 0; i < items.size(); i++) {
+			Account.Item item = items.get(i);
+			if (i > 0) {
+				sb.append(", ");
+			}
+			sb.append("{\"title\": \"").append(item.getTitle()).append("\", \"amount\": ").append(item.getAmount())
+					.append("}");
+		}
+		return sb.append("]").toString();
+	}
 
-		return new ItemMetric(item.getTitle(), amount);
+	private BigDecimal total(List<Account.Item> items) {
+		return items == null ? BigDecimal.ZERO
+				: items.stream().map(Account.Item::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+	}
+
+	private MetricResponse metric(BigDecimal current, BigDecimal previous) {
+		BigDecimal percentChange = BigDecimal.ZERO.compareTo(previous) == 0 ? BigDecimal.ZERO
+				: current.subtract(previous)
+						.divide(previous.abs(), 4, RoundingMode.HALF_UP)
+						.multiply(BigDecimal.valueOf(100))
+						.setScale(1, RoundingMode.HALF_UP);
+		return new MetricResponse(current, previous, percentChange);
 	}
 }
