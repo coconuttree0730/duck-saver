@@ -29,6 +29,11 @@ spring:
             data-id: ${spring.application.name}-system-rules
             group-id: SENTINEL_GROUP
             rule-type: system
+  rabbitmq:
+    host: ${RABBITMQ_HOST:rabbitmq}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
   datasource:
     url: jdbc:mysql://${MYSQL_HOST:mysql}:3306/duck_saver_account?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
     username: ${MYSQL_USER:account_user}

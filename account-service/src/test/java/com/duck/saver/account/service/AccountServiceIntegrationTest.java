@@ -38,6 +38,11 @@ class AccountServiceIntegrationTest {
 				.withDatabaseName("duck_saver_account")
 				.withInitScript("sql/account_schema.sql");
 
+	@Container
+	@ServiceConnection
+	static org.testcontainers.containers.RabbitMQContainer rabbit =
+			new org.testcontainers.containers.RabbitMQContainer("rabbitmq:3.13-management");
+
 	@Autowired
 	private AccountServiceImpl accountService;
 

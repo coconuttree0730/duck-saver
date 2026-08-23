@@ -12,9 +12,9 @@
 
 | 服务 | 端口 | 说明 |
 |------|------|------|
-| mysql | 3306 | 1 实例 4 Schema |
+| mysql | 3306 | 1 实例 4 Schema；建库脚本在 `docs/sql/`（statistics 库含事件幂等表 `processed_event`） |
 | redis | 6379 | L2 缓存 |
-| rabbitmq | 5672（AMQP）/ 15672（管理后台） | 需安装 delayed_message_exchange 插件 |
+| rabbitmq | 5672（AMQP）/ 15672（管理后台） | 账户事件拓扑由服务启动时声明式创建（exchange `account.event.exchange` + 两队列 + 死信） |
 | nacos-server | 8848 | 注册/配置中心控制台 |
 | nginx | 80 / 443 | 反向代理：`/` → frontend:3000，API 路径 → gateway:4000 |
 | sentinel-dashboard | 8858 | 限流控制台 |

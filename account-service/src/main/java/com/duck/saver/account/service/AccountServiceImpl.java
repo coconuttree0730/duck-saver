@@ -17,6 +17,8 @@ import com.duck.saver.account.mapper.SavingMapper;
 import com.duck.saver.account.mapper.TransactionMapper;
 import com.duck.saver.common.api.ConflictException;
 import com.duck.saver.common.api.NotFoundException;
+import com.duck.saver.account.event.AccountEventPublisher;
+import com.duck.saver.common.event.EventType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +47,9 @@ public class AccountServiceImpl implements AccountService {
 
 	@Autowired
 	private StatisticsServiceClient statisticsClient;
+
+	@Autowired
+	private AccountEventPublisher eventPublisher;
 
 	@Override
 	public AccountResponse findByName(String accountName) {
@@ -110,6 +115,8 @@ public class AccountServiceImpl implements AccountService {
 		transaction.setType(request.getType());
 		transaction.setDate(request.getDate());
 		transactionMapper.insert(transaction);
+
+		eventPublisher.publish(EventType.ITEM_ADDED, account);
 
 		pushStatistics(account);
 	}
