@@ -2,7 +2,7 @@
 
 > Issue 标题（发布时使用）：`feat: migrate data layer to MySQL and rewrite APIs to contract`
 > 标签：`ready-for-agent`　分支建议：`feature/phase2a-mysql-contract`
-> 阶段二第 1/3 个 spec（B：OAuth2+MQ 一致性；C：缓存锁+可观测性）
+> 阶段二第 1/4 个 spec（原"Spec B/C"已细化为：003 B1-OAuth2 · 004 B2-MQ 一致性 · 005 C-缓存锁+可观测性；实施顺序 004 → 005(C-1) → 003 → 005(C-2)）
 
 ---
 
