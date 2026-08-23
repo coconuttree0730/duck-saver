@@ -1,7 +1,7 @@
 package com.duck.saver.statistics.controller;
 
 import com.duck.saver.statistics.domain.Account;
-import com.duck.saver.statistics.domain.timeseries.DataPoint;
+import com.duck.saver.statistics.dto.StatisticsResponse;
 import com.duck.saver.statistics.service.StatisticsService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Principal;
-import java.util.List;
 
 @RestController
 public class StatisticsController {
@@ -21,12 +20,17 @@ public class StatisticsController {
 	private StatisticsService statisticsService;
 
 	@GetMapping(value = "/current")
-	public List<DataPoint> getCurrentAccountStatistics(Principal principal) {
+	public StatisticsResponse getCurrentAccountStatistics(Principal principal) {
 		return statisticsService.findByAccountName(principal.getName());
 	}
 
+	@GetMapping(value = "/demo")
+	public StatisticsResponse getDemoStatistics() {
+		return statisticsService.findByAccountName("demo");
+	}
+
 	@GetMapping(value = "/{accountName}")
-	public List<DataPoint> getStatisticsByAccountName(@PathVariable String accountName) {
+	public StatisticsResponse getStatisticsByAccountName(@PathVariable String accountName) {
 		return statisticsService.findByAccountName(accountName);
 	}
 

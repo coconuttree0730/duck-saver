@@ -31,13 +31,10 @@ spring:
             data-id: ${spring.application.name}-system-rules
             group-id: SENTINEL_GROUP
             rule-type: system
-  data:
-    mongodb:
-      host: ${MONGODB_HOST:mongodb}
-      port: ${MONGODB_PORT:27017}
-      username: ${MONGODB_USER:user}
-      password: ${MONGODB_PASSWORD:password}
-      database: piggymetrics
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:mysql}:3306/duck_saver_statistics?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: ${MYSQL_USER:statistics_user}
+    password: ${MYSQL_PASSWORD:dev_password}
       authentication-database: admin
 
 feign:
@@ -57,8 +54,6 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
 
-rates:
-  url: https://api.exchangeratesapi.io
 
 logging:
   level:
