@@ -18,13 +18,10 @@ spring:
       transport:
         dashboard: ${SENTINEL_DASHBOARD_ADDR:sentinel-dashboard:8858}
       eager: false
-  data:
-    mongodb:
-      host: ${MONGODB_HOST:mongodb}
-      port: ${MONGODB_PORT:27017}
-      username: ${MONGODB_USER:user}
-      password: ${MONGODB_PASSWORD:password}
-      database: piggymetrics
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:mysql}:3306/duck_saver_auth?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: ${MYSQL_USER:auth_user}
+    password: ${MYSQL_PASSWORD:dev_password}
       authentication-database: admin
   data.redis:
     host: ${REDIS_HOST:redis}
