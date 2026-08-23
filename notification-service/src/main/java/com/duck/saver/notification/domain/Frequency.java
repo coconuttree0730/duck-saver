@@ -6,7 +6,7 @@ public enum Frequency {
 
 	WEEKLY(7), MONTHLY(30), QUARTERLY(90);
 
-	private int days;
+	private final int days;
 
 	Frequency(int days) {
 		this.days = days;

@@ -1,6 +1,7 @@
 package com.duck.saver.notification.controller;
 
-import com.duck.saver.notification.domain.Recipient;
+import com.duck.saver.notification.dto.RecipientResponse;
+import com.duck.saver.notification.dto.SaveRecipientRequest;
 import com.duck.saver.notification.service.RecipientService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,12 +21,13 @@ public class RecipientController {
 	private RecipientService recipientService;
 
 	@GetMapping(path = "/current")
-	public Recipient getCurrentNotificationsSettings(Principal principal) {
+	public RecipientResponse getCurrentNotificationsSettings(Principal principal) {
 		return recipientService.findByAccountName(principal.getName());
 	}
 
 	@PutMapping(path = "/current")
-	public Recipient saveCurrentNotificationsSettings(Principal principal, @Valid @RequestBody Recipient recipient) {
-		return recipientService.save(principal.getName(), recipient);
+	public RecipientResponse saveCurrentNotificationsSettings(Principal principal,
+			@Valid @RequestBody SaveRecipientRequest request) {
+		return recipientService.save(principal.getName(), request);
 	}
 }

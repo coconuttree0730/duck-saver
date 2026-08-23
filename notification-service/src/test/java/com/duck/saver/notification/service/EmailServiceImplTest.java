@@ -77,10 +77,10 @@ class EmailServiceImplTest {
 		recipient.setAccountName("test");
 		recipient.setEmail("test@test.com");
 
-		when(env.getProperty(NotificationType.REMIND.getSubject())).thenReturn(subject);
-		when(env.getProperty(NotificationType.REMIND.getText())).thenReturn(text);
+		when(env.getProperty(NotificationType.BILL_REMINDER.getSubject())).thenReturn(subject);
+		when(env.getProperty(NotificationType.BILL_REMINDER.getText())).thenReturn(text);
 
-		emailService.send(NotificationType.REMIND, recipient, null);
+		emailService.send(NotificationType.BILL_REMINDER, recipient, null);
 
 		verify(mailSender).send(captor.capture());
 
