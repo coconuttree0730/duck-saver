@@ -1,6 +1,6 @@
 package com.duck.saver.auth.config;
 
-import cn.dev33.satoken.jwt.StpLogicJwtForMixin;
+import cn.dev33.satoken.jwt.StpLogicJwtForSimple;
 import cn.dev33.satoken.stp.StpLogic;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,6 +14,6 @@ public class SaTokenJwtConfig {
 
 	@Bean
 	public StpLogic getStpLogicJwtForMixin() {
-		return new StpLogicJwtForMixin();
+		return new StpLogicJwtForSimple();
 	}
 }

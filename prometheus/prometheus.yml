@@ -13,7 +13,7 @@ scrape_configs:
       - targets: ['auth-service:5000']
 
   - job_name: 'account-service'
-    metrics_path: '/accounts/actuator/prometheus'
+    metrics_path: '/actuator/prometheus'
     static_configs:
       - targets: ['account-service:6000']
 

@@ -18,6 +18,12 @@ spring:
           uri: lb://auth-service
           predicates:
             - Path=/uaa/**
+        - id: account-docs
+          uri: lb://account-service
+          predicates:
+            - Path=/accounts/webjars/**
+          filters:
+            - RewritePath=/accounts/(?<segment>.*), /$\{segment\}
         - id: account-service
           uri: lb://account-service
           predicates:

@@ -35,7 +35,6 @@ spring:
     url: jdbc:mysql://${MYSQL_HOST:mysql}:3306/duck_saver_statistics?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
     username: ${MYSQL_USER:statistics_user}
     password: ${MYSQL_PASSWORD:dev_password}
-      authentication-database: admin
 
 feign:
   sentinel:

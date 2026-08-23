@@ -22,7 +22,7 @@ spring:
     url: jdbc:mysql://${MYSQL_HOST:mysql}:3306/duck_saver_auth?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
     username: ${MYSQL_USER:auth_user}
     password: ${MYSQL_PASSWORD:dev_password}
-      authentication-database: admin
+    authentication-database: admin
   data.redis:
     host: ${REDIS_HOST:redis}
     port: ${REDIS_PORT:6379}
