@@ -31,6 +31,17 @@ services:
       - 15673:5672
       - 25672:15672
 
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password}
+      TZ: Asia/Shanghai
+    ports:
+      - 127.0.0.1:3306:3306
+    volumes:
+      - ./docs/sql:/docker-entrypoint-initdb.d:ro
+      - mysql-data:/var/lib/mysql
+
   sentinel-dashboard:
     image: bladex/sentinel-dashboard:1.8.0
     ports:
@@ -54,3 +65,4 @@ services:
 
 volumes:
   mongo-data:
+  mysql-data:
