@@ -1,5 +1,7 @@
 package com.duck.saver.common.web;
 
+import com.duck.saver.common.api.ConflictException;
+import com.duck.saver.common.api.NotFoundException;
 import com.duck.saver.common.api.Result;
 import com.duck.saver.common.api.ResultCode;
 import org.slf4j.Logger;
@@ -20,6 +22,20 @@ public class GlobalExceptionHandler {
 	public Result<Void> handleIllegalArgument(IllegalArgumentException e) {
 		log.info("Returning HTTP 400 Bad Request: {}", e.getMessage());
 		return Result.error(ResultCode.PARAM_ERROR, e.getMessage());
+	}
+
+	@ExceptionHandler(NotFoundException.class)
+	@ResponseStatus(HttpStatus.NOT_FOUND)
+	public Result<Void> handleNotFound(NotFoundException e) {
+		log.info("Returning HTTP 404 Not Found: {}", e.getMessage());
+		return Result.error(ResultCode.NOT_FOUND, e.getMessage());
+	}
+
+	@ExceptionHandler(ConflictException.class)
+	@ResponseStatus(HttpStatus.CONFLICT)
+	public Result<Void> handleConflict(ConflictException e) {
+		log.info("Returning HTTP 409 Conflict: {}", e.getMessage());
+		return Result.error(ResultCode.CONFLICT, e.getMessage());
 	}
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)

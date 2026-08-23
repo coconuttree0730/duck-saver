@@ -1,34 +1,23 @@
 package com.duck.saver.account.service;
 
-import com.duck.saver.account.domain.Account;
-import com.duck.saver.account.domain.User;
+import com.duck.saver.account.dto.AccountResponse;
+import com.duck.saver.account.dto.CreateAccountRequest;
+import com.duck.saver.account.dto.TransactionItemRequest;
+import com.duck.saver.account.dto.UpdateAccountRequest;
 
 public interface AccountService {
 
-	/**
-	 * Finds account by given name
-	 *
-	 * @param accountName
-	 * @return found account
-	 */
-	Account findByName(String accountName);
+	AccountResponse findByName(String accountName);
 
-	/**
-	 * Checks if account with the same name already exists
-	 * Invokes Auth Service user creation
-	 * Creates new account with default parameters
-	 *
-	 * @param user
-	 * @return created account
-	 */
-	Account create(User user);
+	AccountResponse create(CreateAccountRequest request);
 
-	/**
-	 * Validates and applies incoming account updates
-	 * Invokes Statistics Service update
-	 *
-	 * @param name
-	 * @param update
-	 */
-	void saveChanges(String name, Account update);
+	void update(String name, UpdateAccountRequest request);
+
+	void delete(String name);
+
+	void addItem(String name, TransactionItemRequest request);
+
+	void deleteItem(String name, String itemId);
+
+	AccountResponse demo();
 }

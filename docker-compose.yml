@@ -109,7 +109,7 @@ services:
     environment:
       NACOS_SERVER_ADDR: nacos-server:8848
       SENTINEL_DASHBOARD_ADDR: sentinel-dashboard:8858
-      MONGODB_HOST: mongodb
+      MYSQL_HOST: mysql
     depends_on:
       - nacos-server
       - mongodb
