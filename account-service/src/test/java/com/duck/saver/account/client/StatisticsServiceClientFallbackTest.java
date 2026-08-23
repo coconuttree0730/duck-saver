@@ -10,6 +10,6 @@ class StatisticsServiceClientFallbackTest {
 
 	@Test
 	public void shouldSwallowErrorOnFallback() {
-		assertDoesNotThrow(() -> fallback.updateStatistics("test", new com.duck.saver.account.domain.Account()));
+		assertDoesNotThrow(() -> fallback.updateStatistics("test", new com.duck.saver.account.client.dto.StatisticsPayload()));
 	}
 }
