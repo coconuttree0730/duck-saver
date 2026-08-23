@@ -1,6 +1,7 @@
 package com.duck.saver.common.web;
 
-import com.duck.saver.common.api.ApiResponse;
+import com.duck.saver.common.api.Result;
+import com.duck.saver.common.api.ResultCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -16,25 +17,25 @@ public class GlobalExceptionHandler {
 
 	@ExceptionHandler(IllegalArgumentException.class)
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
-	public ApiResponse<Void> handleIllegalArgument(IllegalArgumentException e) {
+	public Result<Void> handleIllegalArgument(IllegalArgumentException e) {
 		log.info("Returning HTTP 400 Bad Request: {}", e.getMessage());
-		return ApiResponse.fail(HttpStatus.BAD_REQUEST.value(), e.getMessage());
+		return Result.error(ResultCode.PARAM_ERROR, e.getMessage());
 	}
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
-	public ApiResponse<Void> handleValidation(MethodArgumentNotValidException e) {
+	public Result<Void> handleValidation(MethodArgumentNotValidException e) {
 		String message = e.getBindingResult().getFieldErrors().stream()
 				.map(error -> error.getField() + " " + error.getDefaultMessage())
 				.findFirst()
 				.orElse("validation failed");
-		return ApiResponse.fail(HttpStatus.BAD_REQUEST.value(), message);
+		return Result.error(ResultCode.PARAM_ERROR, message);
 	}
 
 	@ExceptionHandler(Exception.class)
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-	public ApiResponse<Void> handleUnexpected(Exception e) {
+	public Result<Void> handleUnexpected(Exception e) {
 		log.error("Returning HTTP 500 Internal Server Error", e);
-		return ApiResponse.fail(HttpStatus.INTERNAL_SERVER_ERROR.value(), "internal server error");
+		return Result.error(ResultCode.INTERNAL_ERROR);
 	}
 }

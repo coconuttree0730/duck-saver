@@ -1,6 +1,6 @@
 package com.duck.saver.notification.client;
 
-import com.duck.saver.common.api.ApiResponse;
+import com.duck.saver.common.api.Result;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -9,6 +9,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 public interface AccountServiceClient {
 
 	@GetMapping(value = "/accounts/{accountName}")
-	ApiResponse<String> getAccount(@PathVariable("accountName") String accountName);
+	Result<String> getAccount(@PathVariable("accountName") String accountName);
 
 }

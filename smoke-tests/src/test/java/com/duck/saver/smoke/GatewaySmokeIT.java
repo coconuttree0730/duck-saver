@@ -164,7 +164,7 @@ class GatewaySmokeIT {
 		assertEquals(200, accountResponse.statusCode(), "protected resource accessible with token");
 
 		JsonNode accountBody = mapper.readTree(accountResponse.body());
-		assertEquals(0, accountBody.at("/code").asInt(), "wrapped response code 0 on success");
+		assertEquals(200, accountBody.at("/code").asInt(), "wrapped response code 200 on success");
 	}
 
 	@Test

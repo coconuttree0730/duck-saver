@@ -1,7 +1,6 @@
 package com.duck.saver.statistics.controller;
 
-import com.duck.saver.common.api.ApiResponse;
-import com.duck.saver.common.web.ApiResponseWrapAdvice;
+import com.duck.saver.common.web.ResultWrapAdvice;
 import com.duck.saver.common.web.GlobalExceptionHandler;
 import com.duck.saver.statistics.domain.Account;
 import com.duck.saver.statistics.domain.Currency;
@@ -52,7 +51,7 @@ class StatisticsControllerTest {
 	public void setup() throws Exception {
 		MockitoAnnotations.openMocks(this).close();
 		this.mockMvc = MockMvcBuilders.standaloneSetup(statisticsController)
-				.setControllerAdvice(new GlobalExceptionHandler(), new ApiResponseWrapAdvice(mapper))
+				.setControllerAdvice(new GlobalExceptionHandler(), new ResultWrapAdvice(mapper))
 				.build();
 	}
 
@@ -67,7 +66,7 @@ class StatisticsControllerTest {
 
 		mockMvc.perform(get("/test").principal(new UserPrincipal(dataPoint.getId().getAccount())))
 				.andExpect(jsonPath("$.data[0].id.account").value(dataPoint.getId().getAccount()))
-				.andExpect(jsonPath("$.code").value(ApiResponse.SUCCESS))
+				.andExpect(jsonPath("$.code").value(200))
 				.andExpect(status().isOk());
 	}
 

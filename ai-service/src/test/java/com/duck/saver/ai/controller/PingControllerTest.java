@@ -1,6 +1,6 @@
 package com.duck.saver.ai.controller;
 
-import com.duck.saver.common.web.ApiResponseWrapAdvice;
+import com.duck.saver.common.web.ResultWrapAdvice;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,7 +20,7 @@ class PingControllerTest {
 	@BeforeEach
 	public void setup() {
 		this.mockMvc = MockMvcBuilders.standaloneSetup(new PingController())
-				.setControllerAdvice(new ApiResponseWrapAdvice(mapper))
+				.setControllerAdvice(new ResultWrapAdvice(mapper))
 				.build();
 	}
 

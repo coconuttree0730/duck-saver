@@ -1,6 +1,7 @@
 package com.duck.saver.notification.service;
 
-import com.duck.saver.common.api.ApiResponse;
+import com.duck.saver.common.api.Result;
+import com.duck.saver.common.api.ResultCode;
 import com.duck.saver.notification.client.AccountServiceClient;
 import com.duck.saver.notification.domain.NotificationType;
 import com.duck.saver.notification.domain.Recipient;
@@ -38,8 +39,8 @@ public class NotificationServiceImpl implements NotificationService {
 
 		recipients.forEach(recipient -> CompletableFuture.runAsync(() -> {
 			try {
-				ApiResponse<String> accountBackup = client.getAccount(recipient.getAccountName());
-				if (accountBackup.getCode() != ApiResponse.SUCCESS) {
+				Result<String> accountBackup = client.getAccount(recipient.getAccountName());
+				if (accountBackup.getCode() != ResultCode.SUCCESS.getCode()) {
 					log.error("skip backup notification for {}: {}", recipient, accountBackup.getMessage());
 					return;
 				}

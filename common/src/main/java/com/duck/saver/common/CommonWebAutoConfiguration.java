@@ -1,6 +1,6 @@
 package com.duck.saver.common;
 
-import com.duck.saver.common.web.ApiResponseWrapAdvice;
+import com.duck.saver.common.web.ResultWrapAdvice;
 import com.duck.saver.common.web.GlobalExceptionHandler;
 import com.duck.saver.common.web.HeaderPrincipalFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,8 +19,8 @@ public class CommonWebAutoConfiguration {
 	}
 
 	@Bean
-	public ApiResponseWrapAdvice apiResponseWrapAdvice(ObjectMapper objectMapper) {
-		return new ApiResponseWrapAdvice(objectMapper);
+	public ResultWrapAdvice resultWrapAdvice(ObjectMapper objectMapper) {
+		return new ResultWrapAdvice(objectMapper);
 	}
 
 	@Bean
