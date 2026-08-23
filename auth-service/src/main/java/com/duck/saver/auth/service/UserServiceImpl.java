@@ -1,7 +1,9 @@
 package com.duck.saver.auth.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.duck.saver.auth.domain.User;
-import com.duck.saver.auth.repository.UserRepository;
+import com.duck.saver.auth.entity.UserEntity;
+import com.duck.saver.auth.mapper.UserMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,33 +18,35 @@ public class UserServiceImpl implements UserService {
 	private static final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
 	@Autowired
-	private UserRepository repository;
+	private UserMapper userMapper;
 
 	@Override
 	public void create(User user) {
 
-		repository.findById(user.getUsername()).ifPresent(it -> {
-			throw new IllegalArgumentException("user already exists: " + it.getUsername());
-		});
+		if ((userMapper.selectList(new LambdaQueryWrapper<UserEntity>()
+				.eq(UserEntity::getUsername, user.getUsername()))).size() > 0) {
+			throw new IllegalArgumentException("user already exists: " + user.getUsername());
+		}
 
-		String hash = encoder.encode(user.getPassword());
-		user.setPassword(hash);
+		UserEntity entity = new UserEntity();
+		entity.setUsername(user.getUsername());
+		entity.setPassword(encoder.encode(user.getPassword()));
+		userMapper.insert(entity);
 
-		repository.save(user);
-
-		log.info("new user has been created: {}", user.getUsername());
+		log.info("new user has been created: {}", entity.getUsername());
 	}
 
 	@Override
 	public User authenticate(String username, String password) {
 
-		User user = repository.findById(username)
-				.orElseThrow(() -> new IllegalArgumentException("invalid credentials"));
-
-		if (!encoder.matches(password, user.getPassword())) {
+		UserEntity entity = userMapper.selectOne(new LambdaQueryWrapper<UserEntity>()
+				.eq(UserEntity::getUsername, username));
+		if (entity == null || !encoder.matches(password, entity.getPassword())) {
 			throw new IllegalArgumentException("invalid credentials");
 		}
 
+		User user = new User();
+		user.setUsername(entity.getUsername());
 		return user;
 	}
 }

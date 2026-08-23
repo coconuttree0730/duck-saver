@@ -1,20 +1,26 @@
 package com.duck.saver.auth.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.duck.saver.auth.domain.User;
-import com.duck.saver.auth.repository.UserRepository;
+import com.duck.saver.auth.entity.UserEntity;
+import com.duck.saver.auth.mapper.UserMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-import java.util.Optional;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.openMocks;
 
 class UserServiceTest {
 
@@ -22,49 +28,56 @@ class UserServiceTest {
 	private UserServiceImpl userService;
 
 	@Mock
-	private UserRepository repository;
+	private UserMapper userMapper;
 
 	private final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
 	@BeforeEach
 	public void setup() throws Exception {
-		org.mockito.MockitoAnnotations.openMocks(this).close();
+		openMocks(this).close();
+	}
+
+	private User user(String username, String password) {
+		User user = new User();
+		user.setUsername(username);
+		user.setPassword(password);
+		return user;
 	}
 
 	@Test
 	public void shouldCreateUserWithHashedPassword() {
 
-		User user = new User();
-		user.setUsername("test");
-		user.setPassword("password");
+		when(userMapper.selectList(any())).thenReturn(List.of());
 
-		userService.create(user);
+		userService.create(user("test", "password"));
 
-		verify(repository, times(1)).save(user);
-		org.junit.jupiter.api.Assertions.assertNotEquals("password", user.getPassword());
-		org.junit.jupiter.api.Assertions.assertTrue(encoder.matches("password", user.getPassword()));
+		ArgumentCaptor<UserEntity> captor = ArgumentCaptor.forClass(UserEntity.class);
+		verify(userMapper, times(1)).insert(captor.capture());
+		assertNotEqualsRaw(captor.getValue().getPassword());
+		assertTrue(encoder.matches("password", captor.getValue().getPassword()));
+		assertEquals("test", captor.getValue().getUsername());
 	}
 
 	@Test
 	public void shouldFailToCreateDuplicateUser() {
 
-		User user = new User();
-		user.setUsername("test");
-		user.setPassword("password");
+		UserEntity existing = new UserEntity();
+		existing.setUsername("dup");
+		existing.setPassword(encoder.encode("x"));
 
-		when(repository.findById(user.getUsername())).thenReturn(Optional.of(user));
+		when(userMapper.selectList(any())).thenReturn(List.of(existing));
 
-		assertThrows(IllegalArgumentException.class, () -> userService.create(user));
+		assertThrows(IllegalArgumentException.class, () -> userService.create(user("dup", "password")));
 	}
 
 	@Test
 	public void shouldAuthenticateWithCorrectPassword() {
 
-		User stored = new User();
+		UserEntity stored = new UserEntity();
 		stored.setUsername("test");
 		stored.setPassword(encoder.encode("password"));
 
-		when(repository.findById("test")).thenReturn(Optional.of(stored));
+		when(userMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(stored);
 
 		User authenticated = userService.authenticate("test", "password");
 
@@ -74,11 +87,11 @@ class UserServiceTest {
 	@Test
 	public void shouldFailAuthenticationWithWrongPassword() {
 
-		User stored = new User();
+		UserEntity stored = new UserEntity();
 		stored.setUsername("test");
 		stored.setPassword(encoder.encode("password"));
 
-		when(repository.findById("test")).thenReturn(Optional.of(stored));
+		when(userMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(stored);
 
 		assertThrows(IllegalArgumentException.class, () -> userService.authenticate("test", "wrong"));
 	}
@@ -86,8 +99,14 @@ class UserServiceTest {
 	@Test
 	public void shouldFailAuthenticationForUnknownUser() {
 
-		when(repository.findById("ghost")).thenReturn(Optional.empty());
+		when(userMapper.selectOne(any(LambdaQueryWrapper.class))).thenReturn(null);
 
 		assertThrows(IllegalArgumentException.class, () -> userService.authenticate("ghost", "password"));
+	}
+
+	private void assertNotEqualsRaw(String password) {
+		if ("password".equals(password)) {
+			throw new AssertionError("password must be hashed");
+		}
 	}
 }
