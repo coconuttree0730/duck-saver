@@ -25,7 +25,8 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
+@SpringBootTest(properties = {
+		"account.event.retry.initial-interval-ms=50"})
 @Testcontainers
 class AccountEventMessagingIntegrationTest {
 
@@ -55,7 +56,7 @@ class AccountEventMessagingIntegrationTest {
 
 	private AccountEvent event(String eventId, String accountName, String expenseTitle, String amount) {
 		AccountSnapshot snapshot = new AccountSnapshot();
-		snapshot.setExpenses(List.of(new AccountSnapshot.Item(expenseTitle, new BigDecimal(amount))));
+		snapshot.setExpenses(List.of(new AccountSnapshot.Item(expenseTitle, amount == null ? null : new BigDecimal(amount))));
 		snapshot.setIncomes(List.of());
 		AccountSnapshot.Saving saving = new AccountSnapshot.Saving(new BigDecimal("5000"));
 		snapshot.setSaving(saving);
@@ -96,5 +97,24 @@ class AccountEventMessagingIntegrationTest {
 		List<DataPointEntity> points = dataPointMapper.selectList(new LambdaQueryWrapper<DataPointEntity>()
 				.eq(DataPointEntity::getAccountName, "dup-account"));
 		assertThat(points).hasSize(1);
+	}
+
+	@Test
+	void shouldRetryThenDeadLetterPoisonEvent() {
+		// amount 为 null 的明细使消费必然抛错 → 重试 3 次后进死信并留痕
+		rabbitTemplate.convertAndSend(com.duck.saver.common.event.MqTopology.EXCHANGE, "",
+				event("evt-poison-1", "poison-account", "毒丸", null));
+
+		org.awaitility.Awaitility.await().atMost(java.time.Duration.ofSeconds(30)).untilAsserted(() -> {
+			Long dead = processedEventMapper.selectCount(
+					new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ProcessedEventEntity>()
+							.eq(ProcessedEventEntity::getEventId, "evt-poison-1")
+							.likeRight(ProcessedEventEntity::getEventType, "ITEM_ADDED_DEAD"));
+			assertThat(dead).isEqualTo(1);
+			Long consumed = processedEventMapper.selectCount(
+					new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ProcessedEventEntity>()
+							.eq(ProcessedEventEntity::getEventId, "evt-poison-1"));
+			assertThat(consumed).isEqualTo(1);
+		});
 	}
 }
