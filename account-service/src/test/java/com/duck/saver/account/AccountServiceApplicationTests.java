@@ -18,6 +18,11 @@ class AccountServiceApplicationTests {
 				.withDatabaseName("duck_saver_account")
 				.withInitScript("sql/account_schema.sql");
 
+	@Container
+	@ServiceConnection
+	static org.testcontainers.containers.GenericContainer<?> redis =
+			new org.testcontainers.containers.GenericContainer<>("redis:7").withExposedPorts(6379);
+
 	@Autowired
 	org.mybatis.spring.SqlSessionTemplate sqlSessionTemplate;
 

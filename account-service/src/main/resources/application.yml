@@ -34,6 +34,10 @@ spring:
     port: ${RABBITMQ_PORT:5672}
     username: ${RABBITMQ_USER:guest}
     password: ${RABBITMQ_PASSWORD:guest}
+  data.redis:
+    host: ${REDIS_HOST:redis}
+    port: ${REDIS_PORT:6379}
+
   datasource:
     url: jdbc:mysql://${MYSQL_HOST:mysql}:3306/duck_saver_account?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
     username: ${MYSQL_USER:account_user}

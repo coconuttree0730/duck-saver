@@ -15,6 +15,12 @@ import com.duck.saver.account.entity.TransactionEntity;
 import com.duck.saver.account.mapper.AccountMapper;
 import com.duck.saver.account.mapper.SavingMapper;
 import com.duck.saver.account.mapper.TransactionMapper;
+import org.springframework.cache.annotation.Cacheable;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
+import org.springframework.cache.annotation.CacheEvict;
 import com.duck.saver.common.api.ConflictException;
 import com.duck.saver.common.api.NotFoundException;
 import com.duck.saver.account.event.AccountEventPublisher;
@@ -51,7 +57,32 @@ public class AccountServiceImpl implements AccountService {
 	@Autowired
 	private AccountEventPublisher eventPublisher;
 
+	@Autowired
+	private RedissonClient redissonClient;
+
+	private static final int MAX_OPTIMISTIC_RETRIES = 3;
+
+	private <T> T withAccountLock(AccountEntity account, Supplier<T> action) {
+		RLock lock = redissonClient.getLock("lock:account:" + account.getId());
+		boolean acquired;
+		try {
+			acquired = lock.tryLock(5, 10, TimeUnit.SECONDS);
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw new ConflictException("account lock interrupted: " + account.getName());
+		}
+		if (!acquired) {
+			throw new ConflictException("failed to acquire account lock: " + account.getName());
+		}
+		try {
+			return action.get();
+		} finally {
+			lock.unlock();
+		}
+	}
+
 	@Override
+	@Cacheable(cacheNames = "accounts", key = "#accountName")
 	public AccountResponse findByName(String accountName) {
 		return assemble(loadAccount(accountName));
 	}
@@ -80,18 +111,26 @@ public class AccountServiceImpl implements AccountService {
 	}
 
 	@Override
+	@CacheEvict(cacheNames = "accounts", key = "#name")
 	public void update(String name, UpdateAccountRequest request) {
-		AccountEntity account = loadAccount(name);
-		if (request.getCurrency() != null && !request.getCurrency().isBlank()) {
-			account.setCurrency(request.getCurrency());
-		}
-		if (accountMapper.updateById(account) == 0) {
+		withAccountLock(loadAccount(name), () -> {
+			for (int attempt = 1; attempt <= MAX_OPTIMISTIC_RETRIES; attempt++) {
+				AccountEntity current = loadAccount(name);
+				if (request.getCurrency() != null && !request.getCurrency().isBlank()) {
+					current.setCurrency(request.getCurrency());
+				}
+				if (accountMapper.updateById(current) > 0) {
+					log.debug("account {} changes has been saved", name);
+					return null;
+				}
+				log.info("optimistic conflict on account {}, retry {}/{}", name, attempt, MAX_OPTIMISTIC_RETRIES);
+			}
 			throw new ConflictException("concurrent modification on account: " + name);
-		}
-		log.debug("account {} changes has been saved", name);
+		});
 	}
 
 	@Override
+	@CacheEvict(cacheNames = "accounts", key = "#name")
 	public void delete(String name) {
 		AccountEntity account = loadAccount(name);
 		accountMapper.deleteById(account.getId());
@@ -101,6 +140,7 @@ public class AccountServiceImpl implements AccountService {
 	}
 
 	@Override
+	@CacheEvict(cacheNames = "accounts", key = "#name")
 	public void addItem(String name, TransactionItemRequest request) {
 		validate(request.getCategory(), request.getType());
 
@@ -122,6 +162,7 @@ public class AccountServiceImpl implements AccountService {
 	}
 
 	@Override
+	@CacheEvict(cacheNames = "accounts", key = "#name")
 	public void deleteItem(String name, String itemId) {
 		AccountEntity account = loadAccount(name);
 		TransactionEntity transaction = transactionMapper.selectById(itemId);

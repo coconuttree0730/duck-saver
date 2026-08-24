@@ -6,6 +6,8 @@ import com.duck.saver.statistics.dto.MetricResponse;
 import com.duck.saver.statistics.dto.StatisticsResponse;
 import com.duck.saver.statistics.entity.DataPointEntity;
 import com.duck.saver.statistics.mapper.DataPointMapper;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +27,7 @@ public class StatisticsServiceImpl implements StatisticsService {
 	private DataPointMapper dataPointMapper;
 
 	@Override
+	@Cacheable(cacheNames = "statistics", key = "#accountName")
 	public StatisticsResponse findByAccountName(String accountName) {
 
 		List<DataPointEntity> points = dataPointMapper.selectList(
@@ -62,6 +65,7 @@ public class StatisticsServiceImpl implements StatisticsService {
 	}
 
 	@Override
+	@CacheEvict(cacheNames = "statistics", key = "#accountName")
 	public void save(String accountName, Account account) {
 
 		LocalDate today = LocalDate.now();

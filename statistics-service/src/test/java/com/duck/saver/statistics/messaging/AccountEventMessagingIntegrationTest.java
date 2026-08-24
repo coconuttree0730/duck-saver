@@ -39,6 +39,11 @@ class AccountEventMessagingIntegrationTest {
 			.withDatabaseName("duck_saver_statistics")
 			.withInitScript("sql/statistics_schema.sql");
 
+	@Container
+	@ServiceConnection
+	static org.testcontainers.containers.GenericContainer<?> redis =
+			new org.testcontainers.containers.GenericContainer<>("redis:7").withExposedPorts(6379);
+
 	@Autowired
 	private RabbitTemplate rabbitTemplate;
 
