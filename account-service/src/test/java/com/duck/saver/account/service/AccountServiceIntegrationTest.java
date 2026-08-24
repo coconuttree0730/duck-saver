@@ -1,7 +1,5 @@
 package com.duck.saver.account.service;
 
-import com.duck.saver.account.client.StatisticsServiceClient;
-import com.duck.saver.account.client.dto.StatisticsPayload;
 import com.duck.saver.account.dto.AccountResponse;
 import com.duck.saver.account.dto.CreateAccountRequest;
 import com.duck.saver.account.dto.TransactionItemRequest;
@@ -9,7 +7,6 @@ import com.duck.saver.account.dto.UpdateAccountRequest;
 import com.duck.saver.account.entity.AccountEntity;
 import com.duck.saver.account.mapper.AccountMapper;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
@@ -23,8 +20,6 @@ import java.time.LocalDate;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 /**
  * 服务层集成测试：真实 MySQL（Testcontainers）+ Mockito 隔离外部 Feign。
@@ -55,9 +50,6 @@ class AccountServiceIntegrationTest {
 	@Autowired
 	private AccountMapper accountMapper;
 
-	@org.springframework.boot.test.mock.mockito.MockBean
-	private StatisticsServiceClient statisticsClient;
-
 	@Test
 	public void shouldCreateAccountWithDefaultSaving() {
 
@@ -73,8 +65,6 @@ class AccountServiceIntegrationTest {
 		assertEquals(0, BigDecimal.ZERO.compareTo(response.getSaving().getAmount()));
 		assertEquals(0, response.getItems().size());
 
-		verify(statisticsClient, times(0)).updateStatistics(org.mockito.ArgumentMatchers.anyString(),
-				org.mockito.ArgumentMatchers.any(StatisticsPayload.class));
 	}
 
 	@Test
@@ -105,11 +95,6 @@ class AccountServiceIntegrationTest {
 		item.setDate(LocalDate.now());
 
 		accountService.addItem("carol", item);
-
-		ArgumentCaptor<StatisticsPayload> captor = ArgumentCaptor.forClass(StatisticsPayload.class);
-		verify(statisticsClient, times(1)).updateStatistics(org.mockito.ArgumentMatchers.eq("carol"),
-				captor.capture());
-		assertEquals(1, captor.getValue().getExpenses().size());
 
 		AccountResponse response = accountService.findByName("carol");
 		assertEquals(1, response.getItems().size());

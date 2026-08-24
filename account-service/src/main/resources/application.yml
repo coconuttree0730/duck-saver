@@ -44,10 +44,6 @@ spring:
     password: ${MYSQL_PASSWORD:dev_password}
     authentication-database: admin
 
-feign:
-  sentinel:
-    enabled: true
-
 management:
   endpoints:
     web:

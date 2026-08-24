@@ -1,8 +1,6 @@
 package com.duck.saver.account.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.duck.saver.account.client.StatisticsServiceClient;
-import com.duck.saver.account.client.dto.StatisticsPayload;
 import com.duck.saver.account.dto.AccountResponse;
 import com.duck.saver.account.dto.CreateAccountRequest;
 import com.duck.saver.account.dto.ItemResponse;
@@ -50,9 +48,6 @@ public class AccountServiceImpl implements AccountService {
 
 	@Autowired
 	private SavingMapper savingMapper;
-
-	@Autowired
-	private StatisticsServiceClient statisticsClient;
 
 	@Autowired
 	private AccountEventPublisher eventPublisher;
@@ -106,6 +101,7 @@ public class AccountServiceImpl implements AccountService {
 		saving.setCurrency(request.getCurrency());
 		savingMapper.insert(saving);
 
+		eventPublisher.publish(EventType.ACCOUNT_CREATED, account);
 		log.info("new account has been created: {}", account.getName());
 		return assemble(account);
 	}
@@ -120,6 +116,7 @@ public class AccountServiceImpl implements AccountService {
 					current.setCurrency(request.getCurrency());
 				}
 				if (accountMapper.updateById(current) > 0) {
+					eventPublisher.publish(EventType.ACCOUNT_UPDATED, current);
 					log.debug("account {} changes has been saved", name);
 					return null;
 				}
@@ -136,6 +133,7 @@ public class AccountServiceImpl implements AccountService {
 		accountMapper.deleteById(account.getId());
 		transactionMapper.delete(new LambdaQueryWrapper<TransactionEntity>().eq(TransactionEntity::getAccountId, account.getId()));
 		savingMapper.delete(new LambdaQueryWrapper<SavingEntity>().eq(SavingEntity::getAccountId, account.getId()));
+		eventPublisher.publish(EventType.ACCOUNT_DELETED, account);
 		log.info("account has been deleted: {}", name);
 	}
 
@@ -157,8 +155,6 @@ public class AccountServiceImpl implements AccountService {
 		transactionMapper.insert(transaction);
 
 		eventPublisher.publish(EventType.ITEM_ADDED, account);
-
-		pushStatistics(account);
 	}
 
 	@Override
@@ -170,7 +166,7 @@ public class AccountServiceImpl implements AccountService {
 			throw new NotFoundException("transaction not found: " + itemId);
 		}
 		transactionMapper.deleteById(transaction.getId());
-		pushStatistics(account);
+		eventPublisher.publish(EventType.ITEM_DELETED, account);
 	}
 
 	@Override
@@ -207,28 +203,6 @@ public class AccountServiceImpl implements AccountService {
 		response.setSaving(saving == null ? null
 				: new SavingResponse(saving.getAmount(), saving.getInterest(), saving.getDeposit(), saving.getCurrency()));
 		return response;
-	}
-
-	private void pushStatistics(AccountEntity account) {
-		List<TransactionEntity> transactions = transactionMapper.selectList(
-				new LambdaQueryWrapper<TransactionEntity>().eq(TransactionEntity::getAccountId, account.getId()));
-
-		SavingEntity saving = savingMapper.selectOne(
-				new LambdaQueryWrapper<SavingEntity>().eq(SavingEntity::getAccountId, account.getId()));
-
-		StatisticsPayload payload = new StatisticsPayload();
-		payload.setIncomes(transactions.stream()
-				.filter(t -> TransactionEntity.TYPE_INCOME.equals(t.getType()))
-				.map(t -> new StatisticsPayload.ItemPayload(t.getTitle(), t.getAmount()))
-				.toList());
-		payload.setExpenses(transactions.stream()
-				.filter(t -> TransactionEntity.TYPE_EXPENSE.equals(t.getType()))
-				.map(t -> new StatisticsPayload.ItemPayload(t.getTitle(), t.getAmount()))
-				.toList());
-		payload.setSaving(new StatisticsPayload.SavingPayload(
-				saving == null ? BigDecimal.ZERO : saving.getAmount()));
-
-		statisticsClient.updateStatistics(account.getName(), payload);
 	}
 
 	private void validate(String category, String type) {

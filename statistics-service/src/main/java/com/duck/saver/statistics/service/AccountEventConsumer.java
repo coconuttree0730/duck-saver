@@ -47,8 +47,11 @@ public class AccountEventConsumer {
 			return true;
 		}
 
-		Account account = toAccount(event.getData());
-		statisticsService.save(event.getAccountName(), account);
+		switch (event.getEventType()) {
+			case ITEM_ADDED, ITEM_DELETED -> statisticsService.save(event.getAccountName(), toAccount(event.getData()));
+			case ACCOUNT_CREATED, ACCOUNT_UPDATED, ACCOUNT_DELETED ->
+					log.info("account lifecycle event processed: {} for {}", event.getEventType(), event.getAccountName());
+		}
 
 		ProcessedEventEntity record = new ProcessedEventEntity();
 		record.setEventId(event.getEventId());
