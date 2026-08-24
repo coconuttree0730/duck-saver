@@ -1,6 +1,7 @@
 package com.duck.saver.common.web;
 
 import com.duck.saver.common.api.ConflictException;
+import com.duck.saver.common.api.UnauthorizedException;
 import com.duck.saver.common.api.NotFoundException;
 import com.duck.saver.common.api.Result;
 import com.duck.saver.common.api.ResultCode;
@@ -29,6 +30,13 @@ public class GlobalExceptionHandler {
 	public Result<Void> handleNotFound(NotFoundException e) {
 		log.info("Returning HTTP 404 Not Found: {}", e.getMessage());
 		return Result.error(ResultCode.NOT_FOUND, e.getMessage());
+	}
+
+	@ExceptionHandler(UnauthorizedException.class)
+	@ResponseStatus(HttpStatus.UNAUTHORIZED)
+	public Result<Void> handleUnauthorized(UnauthorizedException e) {
+		log.info("Returning HTTP 401 Unauthorized: {}", e.getMessage());
+		return Result.error(ResultCode.UNAUTHORIZED, e.getMessage());
 	}
 
 	@ExceptionHandler(ConflictException.class)
