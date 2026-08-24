@@ -1,5 +1,6 @@
 package com.duck.saver.common.web;
 
+import com.duck.saver.common.api.BusinessException;
 import com.duck.saver.common.api.ConflictException;
 import com.duck.saver.common.api.UnauthorizedException;
 import com.duck.saver.common.api.NotFoundException;
@@ -44,6 +45,13 @@ public class GlobalExceptionHandler {
 	public Result<Void> handleConflict(ConflictException e) {
 		log.info("Returning HTTP 409 Conflict: {}", e.getMessage());
 		return Result.error(ResultCode.CONFLICT, e.getMessage());
+	}
+
+	@ExceptionHandler(BusinessException.class)
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	public Result<Void> handleBusiness(BusinessException e) {
+		log.info("Returning business error {}: {}", e.getCode(), e.getMessage());
+		return Result.response(e.getCode(), e.getMessage(), null);
 	}
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)
