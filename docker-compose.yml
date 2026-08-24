@@ -90,8 +90,11 @@ services:
       - ./skywalking/skywalking-agent:/agent:ro
     ports:
       - 127.0.0.1:5000:5000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
-      JAVA_TOOL_OPTIONS: "-javaagent:/agent/skywalking-agent.jar"
+      JAVA_TOOL_OPTIONS: "-javaagent:/agent/skywalking-agent.jar -Dhttp.proxyHost=host.docker.internal -Dhttp.proxyPort=7897 -Dhttps.proxyHost=host.docker.internal -Dhttps.proxyPort=7897 -Dhttp.nonProxyHosts=localhost|127.*|[::1]|nacos-server|mysql|redis|rabbitmq|gateway|sentinel-dashboard|skywalking-oap|loki|*-service|172.*|10.*|192.168.*"
+      SW_LOGGING_DIR: /tmp/sw-logs
       SW_AGENT_NAME: auth-service
       SW_AGENT_COLLECTOR_BACKEND_SERVICES: skywalking-oap:11800
       NACOS_SERVER_ADDR: nacos-server:8848
@@ -112,7 +115,8 @@ services:
     ports:
       - 127.0.0.1:6000:6000
     environment:
-      JAVA_TOOL_OPTIONS: "-javaagent:/agent/skywalking-agent.jar"
+      JAVA_TOOL_OPTIONS: "-javaagent:/agent/skywalking-agent.jar -Dhttp.proxyHost=host.docker.internal -Dhttp.proxyPort=7897 -Dhttps.proxyHost=host.docker.internal -Dhttps.proxyPort=7897 -Dhttp.nonProxyHosts=localhost|127.*|[::1]|nacos-server|mysql|redis|rabbitmq|gateway|sentinel-dashboard|skywalking-oap|loki|*-service|172.*|10.*|192.168.*"
+      SW_LOGGING_DIR: /tmp/sw-logs
       SW_AGENT_NAME: account-service
       SW_AGENT_COLLECTOR_BACKEND_SERVICES: skywalking-oap:11800
       NACOS_SERVER_ADDR: nacos-server:8848
@@ -130,7 +134,8 @@ services:
     ports:
       - 127.0.0.1:7000:7000
     environment:
-      JAVA_TOOL_OPTIONS: "-javaagent:/agent/skywalking-agent.jar"
+      JAVA_TOOL_OPTIONS: "-javaagent:/agent/skywalking-agent.jar -Dhttp.proxyHost=host.docker.internal -Dhttp.proxyPort=7897 -Dhttps.proxyHost=host.docker.internal -Dhttps.proxyPort=7897 -Dhttp.nonProxyHosts=localhost|127.*|[::1]|nacos-server|mysql|redis|rabbitmq|gateway|sentinel-dashboard|skywalking-oap|loki|*-service|172.*|10.*|192.168.*"
+      SW_LOGGING_DIR: /tmp/sw-logs
       SW_AGENT_NAME: statistics-service
       SW_AGENT_COLLECTOR_BACKEND_SERVICES: skywalking-oap:11800
       NACOS_SERVER_ADDR: nacos-server:8848
@@ -150,7 +155,8 @@ services:
     ports:
       - 127.0.0.1:8000:8000
     environment:
-      JAVA_TOOL_OPTIONS: "-javaagent:/agent/skywalking-agent.jar"
+      JAVA_TOOL_OPTIONS: "-javaagent:/agent/skywalking-agent.jar -Dhttp.proxyHost=host.docker.internal -Dhttp.proxyPort=7897 -Dhttps.proxyHost=host.docker.internal -Dhttps.proxyPort=7897 -Dhttp.nonProxyHosts=localhost|127.*|[::1]|nacos-server|mysql|redis|rabbitmq|gateway|sentinel-dashboard|skywalking-oap|loki|*-service|172.*|10.*|192.168.*"
+      SW_LOGGING_DIR: /tmp/sw-logs
       SW_AGENT_NAME: notification-service
       SW_AGENT_COLLECTOR_BACKEND_SERVICES: skywalking-oap:11800
       NACOS_SERVER_ADDR: nacos-server:8848
@@ -168,7 +174,8 @@ services:
     ports:
       - 127.0.0.1:19000:9000
     environment:
-      JAVA_TOOL_OPTIONS: "-javaagent:/agent/skywalking-agent.jar"
+      JAVA_TOOL_OPTIONS: "-javaagent:/agent/skywalking-agent.jar -Dhttp.proxyHost=host.docker.internal -Dhttp.proxyPort=7897 -Dhttps.proxyHost=host.docker.internal -Dhttps.proxyPort=7897 -Dhttp.nonProxyHosts=localhost|127.*|[::1]|nacos-server|mysql|redis|rabbitmq|gateway|sentinel-dashboard|skywalking-oap|loki|*-service|172.*|10.*|192.168.*"
+      SW_LOGGING_DIR: /tmp/sw-logs
       SW_AGENT_NAME: ai-service
       SW_AGENT_COLLECTOR_BACKEND_SERVICES: skywalking-oap:11800
       NACOS_SERVER_ADDR: nacos-server:8848

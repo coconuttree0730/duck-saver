@@ -67,3 +67,14 @@ cd .. && docker compose up -d
 
 - OAP UI：http://127.0.0.1:8082 ；OAP gRPC 11800 仅容器网络内部使用
 - Loki：Promtail 按容器名采集全部后端容器日志 → http://127.0.0.1:3100 ；Grafana 预配 "Duck Saver - Logs (Loki)" 面板
+
+## GitHub OAuth 出网代理（本机网络限制）
+
+容器内直连 github.com 不通，auth-service 的 JVM 已配置走宿主机 clash：
+
+- `JAVA_TOOL_OPTIONS` 带 `-Dhttps.proxyHost=host.docker.internal -Dhttps.proxyPort=7897`
+- `nonProxyHosts` 排除全部内部服务名，只有外网 HTTP 走代理
+- **前置条件**：宿主机需有进程监听 `172.18.0.1:7897` 转发到 clash 的 `127.0.0.1:7897`。
+  最省事的替代方案：在 clash-verge 里打开「允许局域网连接」（绑定 0.0.0.0），即可去掉转发进程直接连通。
+- 验证：`curl -x http://127.0.0.1:7897 -I https://github.com` 通，且
+  `POST /uaa/oauth2/github` 用假 code 返回 `4002`（而非超时）即链路正常。
