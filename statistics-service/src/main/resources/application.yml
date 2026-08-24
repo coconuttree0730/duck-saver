@@ -4,6 +4,9 @@ server:
     context-path: /statistics
 
 spring:
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
   application:
     name: statistics-service
   config:

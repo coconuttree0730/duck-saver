@@ -68,6 +68,7 @@ services:
       - ./skywalking/skywalking-agent:/agent:ro
     environment:
       JAVA_TOOL_OPTIONS: "-javaagent:/agent/skywalking-agent.jar"
+      SW_LOGGING_DIR: /tmp/sw-logs
       SW_AGENT_NAME: gateway
       SW_AGENT_COLLECTOR_BACKEND_SERVICES: skywalking-oap:11800
       NACOS_SERVER_ADDR: nacos-server:8848
@@ -135,9 +136,11 @@ services:
       NACOS_SERVER_ADDR: nacos-server:8848
       SENTINEL_DASHBOARD_ADDR: sentinel-dashboard:8858
       MYSQL_HOST: mysql
+      REDIS_HOST: redis
     depends_on:
       - nacos-server
       - mysql
+      - redis
     restart: always
 
   notification-service:
