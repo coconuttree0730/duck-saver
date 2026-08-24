@@ -8,6 +8,9 @@ services:
     ports:
       - 127.0.0.1:8848:8848
       - 127.0.0.1:9848:9848
+    volumes:
+      - nacos-data:/home/nacos/data
+      - nacos-logs:/home/nacos/logs
     restart: always
 
   redis:
@@ -61,7 +64,12 @@ services:
 
   gateway:
     build: gateway
+    volumes:
+      - ./skywalking/agent:/agent:ro
     environment:
+      JAVA_TOOL_OPTIONS: "-javaagent:/agent/skywalking-agent.jar"
+      SW_AGENT_NAME: gateway
+      SW_COLLECTOR_BACKEND_SERVICE: skywalking-oap:11800
       NACOS_SERVER_ADDR: nacos-server:8848
       REDIS_HOST: redis
       SPRING_DATA_REDIS_HOST: redis
@@ -77,9 +85,14 @@ services:
 
   auth-service:
     build: auth-service
+    volumes:
+      - ./skywalking/agent:/agent:ro
     ports:
       - 127.0.0.1:5000:5000
     environment:
+      JAVA_TOOL_OPTIONS: "-javaagent:/agent/skywalking-agent.jar"
+      SW_AGENT_NAME: auth-service
+      SW_COLLECTOR_BACKEND_SERVICE: skywalking-oap:11800
       NACOS_SERVER_ADDR: nacos-server:8848
       SENTINEL_DASHBOARD_ADDR: sentinel-dashboard:8858
       MYSQL_HOST: mysql
@@ -93,9 +106,14 @@ services:
 
   account-service:
     build: account-service
+    volumes:
+      - ./skywalking/agent:/agent:ro
     ports:
       - 127.0.0.1:6000:6000
     environment:
+      JAVA_TOOL_OPTIONS: "-javaagent:/agent/skywalking-agent.jar"
+      SW_AGENT_NAME: account-service
+      SW_COLLECTOR_BACKEND_SERVICE: skywalking-oap:11800
       NACOS_SERVER_ADDR: nacos-server:8848
       SENTINEL_DASHBOARD_ADDR: sentinel-dashboard:8858
       MYSQL_HOST: mysql
@@ -106,9 +124,14 @@ services:
 
   statistics-service:
     build: statistics-service
+    volumes:
+      - ./skywalking/agent:/agent:ro
     ports:
       - 127.0.0.1:7000:7000
     environment:
+      JAVA_TOOL_OPTIONS: "-javaagent:/agent/skywalking-agent.jar"
+      SW_AGENT_NAME: statistics-service
+      SW_COLLECTOR_BACKEND_SERVICE: skywalking-oap:11800
       NACOS_SERVER_ADDR: nacos-server:8848
       SENTINEL_DASHBOARD_ADDR: sentinel-dashboard:8858
       MYSQL_HOST: mysql
@@ -119,9 +142,14 @@ services:
 
   notification-service:
     build: notification-service
+    volumes:
+      - ./skywalking/agent:/agent:ro
     ports:
       - 127.0.0.1:8000:8000
     environment:
+      JAVA_TOOL_OPTIONS: "-javaagent:/agent/skywalking-agent.jar"
+      SW_AGENT_NAME: notification-service
+      SW_COLLECTOR_BACKEND_SERVICE: skywalking-oap:11800
       NACOS_SERVER_ADDR: nacos-server:8848
       SENTINEL_DASHBOARD_ADDR: sentinel-dashboard:8858
       MYSQL_HOST: mysql
@@ -132,13 +160,63 @@ services:
 
   ai-service:
     build: ai-service
+    volumes:
+      - ./skywalking/agent:/agent:ro
     ports:
       - 127.0.0.1:19000:9000
     environment:
+      JAVA_TOOL_OPTIONS: "-javaagent:/agent/skywalking-agent.jar"
+      SW_AGENT_NAME: ai-service
+      SW_COLLECTOR_BACKEND_SERVICE: skywalking-oap:11800
       NACOS_SERVER_ADDR: nacos-server:8848
       SENTINEL_DASHBOARD_ADDR: sentinel-dashboard:8858
     depends_on:
       - nacos-server
+    restart: always
+
+  skywalking-oap:
+    image: apache/skywalking-oap-server:9.7.0
+    environment:
+      SW_STORAGE: h2
+      SW_HEALTH_CHECKER: default
+      JAVA_OPTS: -Xms512m -Xmx512m
+    ports:
+      - 127.0.0.1:12800:12800
+    healthcheck:
+      test: ["CMD-SHELL", "/skywalking/bin/swctl ch"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+    restart: always
+
+  skywalking-ui:
+    image: apache/skywalking-ui:9.7.0
+    environment:
+      SW_OAP_ADDRESS: http://skywalking-oap:12800
+    ports:
+      - 127.0.0.1:8082:8080
+    depends_on:
+      - skywalking-oap
+    restart: always
+
+  loki:
+    image: grafana/loki:3.0.0
+    command: -config.file=/etc/loki/loki-config.yml
+    volumes:
+      - ./loki/loki-config.yml:/etc/loki/loki-config.yml:ro
+      - loki-data:/loki
+    ports:
+      - 127.0.0.1:3100:3100
+    restart: always
+
+  promtail:
+    image: grafana/promtail:3.0.0
+    command: -config.file=/etc/promtail/promtail-config.yml
+    volumes:
+      - ./promtail/promtail-config.yml:/etc/promtail/promtail-config.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - loki
     restart: always
 
   nginx:
@@ -153,3 +231,6 @@ services:
 
 volumes:
   mysql-data:
+  nacos-data:
+  nacos-logs:
+  loki-data:
