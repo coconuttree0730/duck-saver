@@ -53,3 +53,17 @@ done
 
 > `dev_password` 仅限本地开发；生产凭证走 Nacos 配置注入。
 > 手动重置：`docker compose down -v` 清掉 mysql-data 卷后重启即重新初始化。
+
+## SkyWalking Agent（可观测性链路追踪）
+
+docker-compose 以只读卷方式将 `./skywalking/skywalking-agent` 挂载进各 JVM 服务（`-javaagent` 零侵入接入）。该目录不入版本库，首次拉取代码后需手动下载：
+
+```bash
+cd skywalking
+curl -L -C - -o sw.tgz https://archive.apache.org/dist/skywalking/java-agent/9.4.0/apache-skywalking-java-agent-9.4.0.tgz
+tar xzf sw.tgz   # 解压出 skywalking-agent/
+cd .. && docker compose up -d
+```
+
+- OAP UI：http://127.0.0.1:8082 ；OAP gRPC 11800 仅容器网络内部使用
+- Loki：Promtail 按容器名采集全部后端容器日志 → http://127.0.0.1:3100 ；Grafana 预配 "Duck Saver - Logs (Loki)" 面板

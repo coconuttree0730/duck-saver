@@ -65,11 +65,11 @@ services:
   gateway:
     build: gateway
     volumes:
-      - ./skywalking/agent:/agent:ro
+      - ./skywalking/skywalking-agent:/agent:ro
     environment:
       JAVA_TOOL_OPTIONS: "-javaagent:/agent/skywalking-agent.jar"
       SW_AGENT_NAME: gateway
-      SW_COLLECTOR_BACKEND_SERVICE: skywalking-oap:11800
+      SW_AGENT_COLLECTOR_BACKEND_SERVICES: skywalking-oap:11800
       NACOS_SERVER_ADDR: nacos-server:8848
       REDIS_HOST: redis
       SPRING_DATA_REDIS_HOST: redis
@@ -86,13 +86,13 @@ services:
   auth-service:
     build: auth-service
     volumes:
-      - ./skywalking/agent:/agent:ro
+      - ./skywalking/skywalking-agent:/agent:ro
     ports:
       - 127.0.0.1:5000:5000
     environment:
       JAVA_TOOL_OPTIONS: "-javaagent:/agent/skywalking-agent.jar"
       SW_AGENT_NAME: auth-service
-      SW_COLLECTOR_BACKEND_SERVICE: skywalking-oap:11800
+      SW_AGENT_COLLECTOR_BACKEND_SERVICES: skywalking-oap:11800
       NACOS_SERVER_ADDR: nacos-server:8848
       SENTINEL_DASHBOARD_ADDR: sentinel-dashboard:8858
       MYSQL_HOST: mysql
@@ -107,13 +107,13 @@ services:
   account-service:
     build: account-service
     volumes:
-      - ./skywalking/agent:/agent:ro
+      - ./skywalking/skywalking-agent:/agent:ro
     ports:
       - 127.0.0.1:6000:6000
     environment:
       JAVA_TOOL_OPTIONS: "-javaagent:/agent/skywalking-agent.jar"
       SW_AGENT_NAME: account-service
-      SW_COLLECTOR_BACKEND_SERVICE: skywalking-oap:11800
+      SW_AGENT_COLLECTOR_BACKEND_SERVICES: skywalking-oap:11800
       NACOS_SERVER_ADDR: nacos-server:8848
       SENTINEL_DASHBOARD_ADDR: sentinel-dashboard:8858
       MYSQL_HOST: mysql
@@ -125,13 +125,13 @@ services:
   statistics-service:
     build: statistics-service
     volumes:
-      - ./skywalking/agent:/agent:ro
+      - ./skywalking/skywalking-agent:/agent:ro
     ports:
       - 127.0.0.1:7000:7000
     environment:
       JAVA_TOOL_OPTIONS: "-javaagent:/agent/skywalking-agent.jar"
       SW_AGENT_NAME: statistics-service
-      SW_COLLECTOR_BACKEND_SERVICE: skywalking-oap:11800
+      SW_AGENT_COLLECTOR_BACKEND_SERVICES: skywalking-oap:11800
       NACOS_SERVER_ADDR: nacos-server:8848
       SENTINEL_DASHBOARD_ADDR: sentinel-dashboard:8858
       MYSQL_HOST: mysql
@@ -143,13 +143,13 @@ services:
   notification-service:
     build: notification-service
     volumes:
-      - ./skywalking/agent:/agent:ro
+      - ./skywalking/skywalking-agent:/agent:ro
     ports:
       - 127.0.0.1:8000:8000
     environment:
       JAVA_TOOL_OPTIONS: "-javaagent:/agent/skywalking-agent.jar"
       SW_AGENT_NAME: notification-service
-      SW_COLLECTOR_BACKEND_SERVICE: skywalking-oap:11800
+      SW_AGENT_COLLECTOR_BACKEND_SERVICES: skywalking-oap:11800
       NACOS_SERVER_ADDR: nacos-server:8848
       SENTINEL_DASHBOARD_ADDR: sentinel-dashboard:8858
       MYSQL_HOST: mysql
@@ -161,13 +161,13 @@ services:
   ai-service:
     build: ai-service
     volumes:
-      - ./skywalking/agent:/agent:ro
+      - ./skywalking/skywalking-agent:/agent:ro
     ports:
       - 127.0.0.1:19000:9000
     environment:
       JAVA_TOOL_OPTIONS: "-javaagent:/agent/skywalking-agent.jar"
       SW_AGENT_NAME: ai-service
-      SW_COLLECTOR_BACKEND_SERVICE: skywalking-oap:11800
+      SW_AGENT_COLLECTOR_BACKEND_SERVICES: skywalking-oap:11800
       NACOS_SERVER_ADDR: nacos-server:8848
       SENTINEL_DASHBOARD_ADDR: sentinel-dashboard:8858
     depends_on:
